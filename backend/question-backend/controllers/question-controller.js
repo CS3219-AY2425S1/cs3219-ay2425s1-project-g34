@@ -19,11 +19,11 @@ function validateQuestionFields(fields) {
     difficulty = difficulty.trim();
     leetcode_link = leetcode_link ? leetcode_link.trim() : "";
 
-    // Check if topic is an array and trim each element
+    // Check if topic is an array and trim each element (and remove empty strings)
     if (Array.isArray(topic)) {
-        topic = topic.map(t => t.trim());
+        topic = topic.map(t => t.trim()).filter(t => t !== '');
     } else if (typeof topic === 'string') {
-        topic = [topic.trim()];
+        topic = [topic.trim()].filter(t => t !== '');
     } else {
         return { valid: false, message: "Topic must be an array of strings or a single string" };
     }
@@ -168,7 +168,7 @@ export const updateQuestion = [
     upload.array('imageFiles'),
     async (req, res) => {
         const { id } = req.params;
-        let { images, title } = req.body;
+        let { images, title, topic } = req.body;
         const imageFiles = req.files;
 
         try {
@@ -177,12 +177,18 @@ export const updateQuestion = [
                 return res.status(404).json({ message: "Question not found" });
             }
 
+            // Filter out empty strings from topic array
+            if (Array.isArray(topic)) {
+                topic = topic.map(t => t.trim()).filter(t => t !== '');
+            } else if (typeof topic === 'string') {
+                topic = [topic.trim()].filter(t => t !== '');
+            }
+
             // Validate updated fields
-            const validation = validateQuestionFields({ ...question.toObject(), ...req.body });
+            const validation = validateQuestionFields({ ...question.toObject(), ...req.body, topic });
             if (!validation.valid) {
                 return res.status(400).json({ message: validation.message });
             }
-            const { description, topic, difficulty, input, expected_output, leetcode_link } = validation.data;
 
             // Check if title is unique
             if (title) {
@@ -196,7 +202,7 @@ export const updateQuestion = [
             const allImages = await handleImages(images, imageFiles, id);
             await deleteOldImages(question, allImages);
 
-            const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: { ...req.body, images: allImages } }, { new: true });
+            const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: { ...req.body, topic, images: allImages } }, { new: true });
             if (!updatedQuestion) {
                 return res.status(404).json({ message: "Question not found" });
             }

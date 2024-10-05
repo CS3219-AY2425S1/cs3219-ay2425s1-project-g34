@@ -1,5 +1,6 @@
 MONGO_URL = <insert mongodb connection>
 QUESTION_PORT = <insert port number>
+USER_AUTH_URL = <insert verify token url>
 
 GOOGLE_APPLICATION_CREDENTIALS = <google key json>
 IMAGE_PROJECT_ID = <google project id>

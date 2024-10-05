@@ -1,6 +1,6 @@
 import React from 'react';
-import '../styles/AuthLeftSection.css';
-import LeftImage from '../assets/LeftImage.png';
+import '../../styles/AuthLeftSection.css';
+import LeftImage from '../../assets/LeftImage.png';
 
 const AuthLeftSection = () => {
     return (

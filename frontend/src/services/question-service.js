@@ -2,55 +2,77 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:4000/api/questions';
 
+// Reformat and log error
+const reformatError = (action, error) => {
+    error.message = error.response
+        ? `${action} ${error.response.data.message}`
+        : error.request
+        ? `${action} Unable to connect to the network`
+        : `AxiosError (${error.message})`;
+    
+    console.error(action, error);
+    return error;
+}
+
 // Create question
-const createQuestion = async (formData) => {
+const createQuestion = async (cookies, formData) => {
     try {
         const response = await axios.post(BASE_URL, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${cookies.token}`
+            },
+            withCredentials: true
         });
         return response.data;
     } catch (error) {
-        console.error('Error creating question:', error);
-        throw error;
+        throw reformatError('Error creating question:', error);
     }
 }
 
 // Update question
-const updateQuestion = async (id, formData) => {
+const updateQuestion = async (id, cookies, formData) => {
     try {
         const response = await axios.put(`${BASE_URL}/${id}`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${cookies.token}`
+            },
+            withCredentials: true
         });
         return response.data;
     } catch (error) {
-        console.error('Error updating question:', error);
-        throw error;
+        throw reformatError('Error updating question:', error);
     }
 }
 
 // Delete question
-const deleteQuestion = async (id) => {
+const deleteQuestion = async (id, cookies) => {
     try {
-        const response = await axios.delete(`${BASE_URL}/${id}`);
+        const response = await axios.delete(`${BASE_URL}/${id}`, {
+            headers: {
+                Authorization: `Bearer ${cookies.token}`
+            },
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
-        console.error('Error deleting question:', error);
-        throw error;
+        throw reformatError('Error deleting question:', error);
     }
 }
 
 // Get question by id
-const getQuestionById = async (id) => {
+const getQuestionById = async (id, cookies) => {
     try {
-        const response = await axios.get(`${BASE_URL}/${id}`);
+        const response = await axios.get(`${BASE_URL}/${id}`, {
+            headers: {
+                Authorization: `Bearer ${cookies.token}`
+            },
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
-        console.error('Error getting question by id:', error);
-        throw error;
+        throw reformatError('Error getting question:', error);
     }
 };
 
@@ -61,18 +83,22 @@ const filterQuestions = async (category, filter) => {
         return response.data;
     } catch (error) {
         console.error('Error filtering questions:', error);
-        throw error;
+        throw reformatError('Error filteirng questions:', error);
     }
 };
 
 // Get all questions
-const getAllQuestions = async () => {
+const getAllQuestions = async (cookies) => {
     try {
-        const response = await axios.get(BASE_URL);
+        const response = await axios.get(BASE_URL, {
+            headers: {
+                Authorization: `Bearer ${cookies.token}`
+            },
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
-        console.error('Error getting all questions:', error);
-        throw error;
+        throw reformatError('Error getting all questions:', error);
     }
 };
 

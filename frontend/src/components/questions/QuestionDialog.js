@@ -4,8 +4,17 @@ import EditButton from './EditQuestionButton';
 import CloseIcon from '@mui/icons-material/Close';
 import ReactMarkdown from 'react-markdown';
 import DeleteQuestion from "./DeleteQuestionDialog";
+import useAuth from "../../hooks/useAuth";
 
 const QuestionDialog = ({ open, question, onClose }) => {
+    const { priviledge } = useAuth();
+
+    const dialogActionsComponent = (
+        <DialogActions sx={{ justifyContent: 'flex-end', padding: '16px',  backgroundColor:'#D9D9D9' }}>
+            <EditButton question={question}/>
+            <DeleteQuestion question={question}/>
+        </DialogActions>);
+
     if (!question) return null;  // If no problem is selected, return null
 
     return (
@@ -87,10 +96,7 @@ const QuestionDialog = ({ open, question, onClose }) => {
 
             </DialogContent>
 
-            <DialogActions sx={{ justifyContent: 'flex-end', padding: '16px',  backgroundColor:'#D9D9D9' }}>
-                <EditButton question={question}/>
-                <DeleteQuestion question={question}/>
-            </DialogActions>
+            {priviledge ? dialogActionsComponent : null}
         </Dialog>
     );
 };

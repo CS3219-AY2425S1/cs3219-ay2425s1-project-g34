@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/AuthBackground.css'; // Add styles specific to BackgroundTriangles
+import '../../styles/AuthBackground.css'; // Add styles specific to BackgroundTriangles
 
 const AuthBackground = () => {
   return (

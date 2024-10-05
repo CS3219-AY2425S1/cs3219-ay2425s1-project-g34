@@ -2,7 +2,7 @@ import React from 'react';
 import AuthNavbar from './AuthNavbar';
 import AuthLeftSection from './AuthLeftSection';
 import AuthBackground from './AuthBackground';
-import '../styles/AuthLayout.css';
+import '../../styles/AuthLayout.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

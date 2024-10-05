@@ -6,8 +6,8 @@ h1 {
     font-weight: 600;
     line-height: normal;
     text-align: left;
-    margin-left: 40px;
     margin-top: 20px;
+
 }
 
 .description {
@@ -16,9 +16,13 @@ h1 {
     font-size: 18px;
     font-weight: 400;
     text-align: left;
-    margin-left: 40px;
     margin-top: -10px;
     word-wrap: break-word;
+}
+
+.questions-container {
+    max-width: 1200px;
+    margin: auto;
 }
 
 .question-table-container {
@@ -27,8 +31,13 @@ h1 {
     margin: auto;
 }
 
-.admin-button {
+.table-buttons {
+    display: flex;
     position: absolute;
-    top: -80px; /* Adjust as needed */
+    top: -90px; /* Adjust as needed */
     right: 0;
+}
+
+.admin-button {
+    margin-left: 8px;
 }

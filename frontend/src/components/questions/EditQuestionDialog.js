@@ -1,8 +1,10 @@
 import * as React from 'react';
-import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
+import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Chip, Autocomplete, FormControl } from '@mui/material';
+import { topics } from '../../assets/topics';
 import ErrorMessage from './ErrorMessageDialog'
-import questionService from '../services/question-service';
-import '../styles/create-question-dialog.css';
+import questionService from '../../services/question-service';
+import '../../styles/create-question-dialog.css';
+import useAuth from '../../hooks/useAuth';
 
 const difficulty_lvl = [
   { value: 'Easy', label: 'Easy' },
@@ -11,6 +13,8 @@ const difficulty_lvl = [
 ];
 
 const EditQuestion = ({ open, handleClose, question }) => {
+    const { cookies } = useAuth();
+
     const [questionData, setQuestionData] = React.useState({
       title: question?.title || '',
       description: question?.description || '',
@@ -29,6 +33,10 @@ const EditQuestion = ({ open, handleClose, question }) => {
     const handleInputChange = (event) => {
       const { name, value } = event.target;
       setQuestionData({ ...questionData, [name]: value });
+    };
+
+    const handleTopicChange = (event, newValue) => {
+        setQuestionData({ ...questionData, topic: newValue.join(', ') });
     };
 
     const handleDifficultyChange = (event) => {
@@ -65,11 +73,11 @@ const EditQuestion = ({ open, handleClose, question }) => {
       }
   
       try {
-          await questionService.updateQuestion(question._id, formData); // Assuming updateQuestion handles the API request for updating
+          await questionService.updateQuestion(question._id, cookies, formData); // Assuming updateQuestion handles the API request for updating
           window.location.reload(); // Refresh the page after the update
           handleClose();
       } catch (error) {
-          setErrorMessage('Error updating question: ' + error.response.data.message); // Set error message
+          setErrorMessage(error.message); // Set error message
           setErrorOpen(true); // Open error dialog
       }
     };
@@ -86,10 +94,11 @@ const EditQuestion = ({ open, handleClose, question }) => {
               margin="dense"
               id="title"
               name="title"
-              label="Title"
+              label="Title (max 100 characters)"
               type="text"
               fullWidth
               multiline
+              inputProps={{ maxLength: 100 }}
               value={questionData.title}
               onChange={handleInputChange}
               className="text-field"
@@ -99,29 +108,47 @@ const EditQuestion = ({ open, handleClose, question }) => {
               required
               id="description"
               name="description"
-              label="Description"
+              label="Description (max 3000 characters)"
               type="text"
               fullWidth
               multiline
               minRows={4}
               maxRows={16}
+              inputProps={{ maxLength: 3000 }}
               value={questionData.description}
               onChange={handleInputChange}
               className="text-field"
             />
-            <TextField
-              margin="dense"
-              required
-              id="topic"
-              name="topic"
-              label="Topics (comma separated)"
-              type="text"
-              fullWidth
-              multiline
-              value={questionData.topic}
-              onChange={handleInputChange}
-              className="text-field"
-            />
+            
+            <FormControl fullWidth margin="dense">
+              <Autocomplete
+                  multiple
+                  id="searchable-topics"
+                  options={topics}
+                  value={questionData.topic.split(',').map((t) => t.trim())}
+                  onChange={handleTopicChange}
+                  filterSelectedOptions
+                  renderTags={(selected, getTagProps) =>
+                    selected.length > 0
+                      ? selected.map((option, index) => (
+                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                        ))
+                      : null // Don't render anything if no topics are selected
+                  }
+                  renderInput={(params) => (
+                      <TextField
+                      {...params}
+                      variant="outlined"
+                      label="Topics"
+                      placeholder="Search for topics"
+                      />
+                  )}
+                  sx={{ width: '100%' }}
+                  isOptionEqualToValue={(option, value) => option === value} // Ensure equality checks
+                  clearOnEscape
+              />
+          </FormControl>
+
             <TextField
               margin="dense"
               fullWidth
@@ -144,11 +171,12 @@ const EditQuestion = ({ open, handleClose, question }) => {
               required
               id="input"
               name="input"
-              label="Input"
+              label="Input (max 500 characters)"
               type="text"
               fullWidth
               multiline
               maxRows={16}
+              inputProps={{ maxLength: 500 }}
               value={questionData.input}
               onChange={handleInputChange}
               className="text-field"
@@ -158,11 +186,12 @@ const EditQuestion = ({ open, handleClose, question }) => {
               required
               id="expected_output"
               name="expected_output"
-              label="Expected Output"
+              label="Expected Output (max 500 characters)"
               type="text"
               fullWidth
               multiline
               maxRows={16}
+              inputProps={{ maxLength: 500 }}
               value={questionData.expected_output}
               onChange={handleInputChange}
               className="text-field"

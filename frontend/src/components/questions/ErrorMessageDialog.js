@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button, Box, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import '../styles/create-question-dialog.css';
+import '../../styles/create-question-dialog.css';
 import { alignProperty } from '@mui/material/styles/cssUtils';
 
 const ErrorMessage = ({ open, handleClose, errorMessage }) => {

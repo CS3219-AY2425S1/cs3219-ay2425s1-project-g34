@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
-import { NavbarContainer } from './NavbarContainer';
-import { NavbarLogo } from './NavbarLogo';
-import { NavbarButton } from './NavbarButton';
+import { NavbarContainer } from '../navbar/NavbarContainer';
+import { NavbarLogo } from '../navbar/NavbarLogo';
+import { NavbarButton } from '../navbar/NavbarButton';
 
 export default function AuthNavbar() {
     return (
