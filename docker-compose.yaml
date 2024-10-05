@@ -13,6 +13,17 @@ services:
     networks:
       - common-network
 
+services:
+  question-service:
+    build: ./frontend/question-backend
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - common-network      
+
 networks:
   common-network:
     driver: bridge
