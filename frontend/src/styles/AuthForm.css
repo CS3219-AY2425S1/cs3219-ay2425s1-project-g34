@@ -1,0 +1,66 @@
+/* Form styling for sign-up or login */
+.signup-form,
+.login-form {
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.signup-button,
+.login-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 1.1rem;
+  background-color: #7bc9ff;
+  color: black;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 40px;
+}
+
+.signup-button:hover,
+.login-button:hover {
+  background-color: #357ae8;
+  color: white;
+}
+
+/* Links */
+.forgot-password {
+  text-align: left;
+  margin-top: 10px;
+}
+
+.login-link,
+.signup-link {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+.forgot-password a
+.login-link a,
+.signup-link a {
+  color: #4e93f9;
+  text-decoration: none;
+}
