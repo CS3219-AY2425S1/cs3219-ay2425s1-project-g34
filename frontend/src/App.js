@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
-import logo from './styles/logo.svg';
 import './styles/App.css';
-import { Home, Login, Questions, Signup } from './pages';
+import { Home, Login, Profile, Questions, Signup } from './pages';
 
 function App() {
   return (
@@ -12,6 +11,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/questions" element={<Questions />} />
       </Routes>
     </div>

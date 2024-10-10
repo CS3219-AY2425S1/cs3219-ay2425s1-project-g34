@@ -108,14 +108,13 @@
   - Required: `userId` path parameter
 
 - Body
-  - At least one of the following fields is required: `username` (string), `email` (string), `password` (string), `profileImage` (string)
+  - At least one of the following fields is required: `username` (string), `email` (string), `password` (string)
 
     ```json
     {
       "username": "SampleUserName",
       "email": "sample@gmail.com",
-      "password": "SecurePassword",
-      "profileImage": "pathToImage"
+      "password": "SecurePassword"
     }
     ```
 
@@ -139,7 +138,47 @@
     | 409 (Conflict)              | Duplicate username or email encountered                 |
     | 500 (Internal Server Error) | Database or server error                                |
 
-### Update User Privilege
+### Update User Profile Image
+- This endpoint allows updating a user's profile image using the their ID.
+
+- HTTP Method: `PATCH`
+
+- Endpoint: http://localhost:3001/users/{userId}/profileImage
+
+- Parameters
+  - Required: `userId` path parameter
+
+- Body
+  - At least one of the following fields is required: `profileImage` (file object), `toDefault` (string)
+
+    ```json
+    {
+      "toDefault": "true"
+    }
+    ```
+    The form containing `profileImage` must be of `multipart/form-data` type. If the `toDefault` field is
+    `true`, then the image will be removed and replaced with a default image.
+
+- Headers
+    - Required: `Authorization: Bearer <JWT_ACCESS_TOKEN>`
+    - Auth Rules:
+
+        - Admin users: Can update any user's image. The server verifies the user associated with the JWT token is an admin user and allows the update of requested user's data.
+          
+        - Non-admin users: Can only update their own image. The server checks if the user ID in the request URL matches the ID of the user associated with the JWT token. If it matches, the server updates the user's own image.
+
+- Responses:
+
+    | Response Code               | Explanation                                             |
+    |-----------------------------|---------------------------------------------------------|
+    | 200 (OK)                    | User updated successfully, updated user data returned   |
+    | 400 (Bad Request)           | Missing fields                                          |
+    | 401 (Unauthorized)          | Access denied due to missing/invalid/expired JWT        |
+    | 403 (Forbidden)             | Access denied for non-admin users updating others' image|
+    | 404 (Not Found)             | User with the specified ID not found                    |
+    | 500 (Internal Server Error) | Database or server error                                |
+
+### Update User Privilege (OBSOLETE. DO NOT USE)
 
 - This endpoint allows updating a user’s privilege, i.e., promoting or demoting them from admin status.
 

@@ -36,9 +36,6 @@ services:
       - ./backend/user-backend:/app
       - ./backend/user-backend/googleKey.json:/app/googleKey.json
       - /app/node_modules
-    environment:
-      - NODE_ENV=production
-      - USER_AUTH_URL=http://user-service:3001/auth/verify-token
     env_file:
       - ./backend/user-backend/.env
     networks:

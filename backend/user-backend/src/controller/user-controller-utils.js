@@ -22,20 +22,23 @@ export function hashPassword(password) {
 }
 
 export async function replaceProfileImage(user, newImage) {
-  if (!newImage) {
-    return newImage;
-  }
-
-  const newImageExtension = newImage.split(".").pop();
-  const newDestinationPath = `${user.id}.${newImageExtension}`;
-
   if (user.profileImage !== DEFAULT_IMAGE) {
     await bucket.file(`${user.id}.${user.profileImage}`).delete();
   }
 
-  await bucket.upload(newImage, {
-    destination: newDestinationPath,
-  });
+  if (newImage === DEFAULT_IMAGE) {
+    return DEFAULT_IMAGE;
+  }
+
+  const newImageExtension = mimetype.split("/").pop();
+  const newImageName = `${user.id}.${newImageExtension}`;
+
+  const blob = bucket.file(newImageName);
+  const options = {
+    metadata: { contentType: mimetype },
+    resumable: false
+  };
+  await blob.save(buffer, options);
 
   return newImageExtension;
 }

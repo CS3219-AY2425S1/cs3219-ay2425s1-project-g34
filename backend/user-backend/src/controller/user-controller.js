@@ -1,5 +1,6 @@
 import { isValidObjectId } from "mongoose";
 import { getImageSignedUrl, hashPassword, replaceProfileImage } from "./user-controller-utils.js";
+import { DEFAULT_IMAGE } from "../model/user-model.js";
 import {
   createUser as _createUser,
   deleteUserById as _deleteUserById,
@@ -79,9 +80,9 @@ export async function getAllUsers(req, res) {
 
 export async function updateUser(req, res) {
   try {
-    const { username, email, password, profileImage } = req.body;
+    const { username, email, password } = req.body;
 
-    if (username || email || password || profileImage) {
+    if (username || email || password) {
       const userId = req.params.id;
       if (!isValidObjectId(userId)) {
         return res.status(404).json({ message: `User ${userId} not found` });
@@ -103,9 +104,8 @@ export async function updateUser(req, res) {
       }
 
       const hashedPassword = hashPassword(password);
-      const newImage = await replaceProfileImage(user, profileImage);
 
-      const updatedUser = await _updateUserById(userId, username, email, hashedPassword, newImage);
+      const updatedUser = await _updateUserById(userId, username, email, hashedPassword);
       return res.status(200).json({
         message: `Updated data for user ${userId}`,
         data: await formatFullUserResponse(updatedUser),
@@ -117,6 +117,40 @@ export async function updateUser(req, res) {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Unknown error when updating user!" });
+  }
+}
+
+export async function updateUserProfileImage(req, res) {
+  const profileImage = req.file;
+  const { toDefault } = req.body;
+
+  if (!profileImage && !toDefault) {
+    return res.status(400).json({ message: "New profile image or toDefault field is missing!" });
+  }
+
+  try {
+    const userId = req.params.id;
+    if (!isValidObjectId(userId)) {
+      return res.status(404).json({ message: `User ${userId} not found` });
+    }
+    const user = await _findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: `User ${userId} not found` });
+    }
+
+    const newImage = toDefault
+      ? await replaceProfileImage(user, DEFAULT_IMAGE)
+      : await replaceProfileImage(user, profileImage);
+    const updatedUser = await _updateUserById(userId, undefined, undefined, undefined, newImage);
+
+    return res.status(200).json({
+      message: `Updated data for user ${userId}`,
+      data: await formatFullUserResponse(updatedUser),
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Unknown error when updating profile image!" });
   }
 }
 
