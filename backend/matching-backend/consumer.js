@@ -2,8 +2,8 @@ const amqp = require('amqplib');
 
 let waitingUsers = []; 
 
-async function findMatch(user) {
-    const { difficulty, topic, language } = user;
+async function findMatch(user, channel, msg) {
+    const { difficulty, topic, language, username } = user;
 
     const matchIndex = waitingUsers.findIndex((waitingUser) =>
         waitingUser.difficulty === difficulty &&
@@ -12,12 +12,21 @@ async function findMatch(user) {
     );
 
     if (matchIndex !== -1) {
-        // Found a match
         const matchedUser = waitingUsers[matchIndex];
-        console.log(`Matched users: ${user.username} and ${matchedUser.username}`);
+        console.log(`Matched users: ${username} and ${matchedUser.username}`);
         
         // Remove matched users from waiting list
         waitingUsers.splice(matchIndex, 1);
+
+        // Send match notification back to both users
+        const matchNotification = JSON.stringify({
+            status: 'matched',
+            matchedWith: matchedUser.username
+        });
+        channel.sendToQueue(msg.properties.replyTo, Buffer.from(matchNotification), {
+            correlationId: msg.properties.correlationId
+        });
+
         return true;
     }
 
@@ -26,10 +35,19 @@ async function findMatch(user) {
     console.log(`User ${user.username} added to waiting list.`);
 
     setTimeout(() => {
-        const userIndex = waitingUsers.findIndex(waitingUser => waitingUser.username === user.username);
+        const userIndex = waitingUsers.findIndex(waitingUser => waitingUser.username === username);
         if (userIndex !== -1) {
             waitingUsers.splice(userIndex, 1);
-            console.log(`Time's up! User ${user.username} removed from the waiting list`);
+            console.log(`Time's up! User ${username} removed from the waiting list`);
+
+            // Notify the frontend that the time is up
+            const timeoutNotification = JSON.stringify({
+                status: 'timeout',
+                message: `No match found for ${username} within the time limit.`
+            });
+            channel.sendToQueue(msg.properties.replyTo, Buffer.from(timeoutNotification), {
+                correlationId: msg.properties.correlationId
+            });
         }
     }, 30000);
 
@@ -48,7 +66,7 @@ async function startConsumer() {
         channel.consume(queue, (msg) => {
             if (msg !== null) {
                 const matchData = JSON.parse(msg.content.toString());
-                findMatch(matchData);
+                findMatch(matchData, channel, msg);
                 channel.ack(msg);
             }
         });

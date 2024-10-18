@@ -23,19 +23,28 @@ const StartSession = ({ username }) => {
         body: JSON.stringify(matchData),
       });
 
-      const result = await response.json();
       if (response.ok) {
+        const result = await response.json();
         console.log('Match request sent:', result);
+
+        const eventSource = new EventSource(`http://localhost:3002/api/match-status/${username}`);
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.status === 'matched') {
+                    console.log(`Matched with ${data.matchedWith}`);
+                    setShowPopup(true);  // Show match found popup
+                } else if (data.status === 'timeout') {
+                    console.log('Timeout:', data.message);
+                    setShowPopup(false);  // Close popup after timeout
+                }
+                eventSource.close();  // Stop listening after getting a response
+            };
       } else {
-        console.error('Error finding match:', result.error);
+        console.error('Error finding match');
       }
     } catch (error) {
       console.error('Network error:', error);
     }
-
-    // Show the popup and start the countdown
-    setShowPopup(true);
-    setCountdown(30);
   };
 
   const closePopup = () => {
