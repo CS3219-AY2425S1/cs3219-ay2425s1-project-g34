@@ -1,6 +1,12 @@
 import { isValidObjectId } from "mongoose";
-import { getImageSignedUrl, hashPassword, replaceProfileImage } from "./user-controller-utils.js";
 import { DEFAULT_IMAGE } from "../model/user-model.js";
+import {
+  getImageSignedUrl,
+  hashPassword,
+  replaceProfileImage,
+  validateEmail,
+  validatePassword,
+} from "./user-controller-utils.js";
 import {
   createUser as _createUser,
   deleteUserById as _deleteUserById,
@@ -15,11 +21,22 @@ import {
 
 export async function createUser(req, res) {
   try {
-    const { username, email, password } = req.body;
+    const username =  req.body.username && req.body.username.trim();
+    const email = req.body.email && req.body.email.trim();
+    const password = req.body.password && req.body.password.trim();
+
     if (username && email && password) {
+      if (!validateEmail(email)) {
+        return res.status(400).json({ message: "Invalid email address" });
+      } else if (!validatePassword(password)) {
+        return res.status(400).json({ message: "Invalid password" });
+      }
+
       const existingUser = await _findUserByUsernameOrEmail(username, email);
-      if (existingUser) {
-        return res.status(409).json({ message: "username or email already exists" });
+      if (existingUser && existingUser.username == username) {
+        return res.status(409).json({ message: "username already exists" });
+      } else if (existingUser && existingUser.email == email) {
+        return res.status(409).json({ message: "email already exists" });
       }
 
       const hashedPassword = hashPassword(password);
@@ -80,13 +97,20 @@ export async function getAllUsers(req, res) {
 
 export async function updateUser(req, res) {
   try {
-    const { username, email, password } = req.body;
+    const username =  req.body.username && req.body.username.trim();
+    const email = req.body.email && req.body.email.trim();
+    const password = req.body.password && req.body.password.trim();
 
     if (username || email || password) {
       const userId = req.params.id;
       if (!isValidObjectId(userId)) {
-        return res.status(404).json({ message: `User ${userId} not found` });
+        return res.status(400).json({ message: `Invalid user ID` });
+      } else if (email && !validateEmail(email)) {
+        return res.status(400).json({ message: "Invalid email address" });
+      } else if (password && !validatePassword(password)) {
+        return res.status(400).json({ message: "Invalid password" });
       }
+
       const user = await _findUserById(userId);
       if (!user) {
         return res.status(404).json({ message: `User ${userId} not found` });

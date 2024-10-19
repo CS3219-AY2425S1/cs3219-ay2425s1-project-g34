@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { validateEmail, validatePassword, validateUsername } from "../services/user-service";
 import AuthLayout from "../components/auth/AuthLayout";
 import '../styles/AuthForm.css';
 
@@ -26,6 +27,7 @@ const SignUp = () => {
   const handleError = (err) =>
     toast.error(err, {
       position: "bottom-left",
+      autoClose: 6000
     });
   const handleSuccess = (msg) =>
     toast.success(msg, {
@@ -34,10 +36,20 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      handleError("Passwords do not match");
-      return;
+
+    const validationChecks = [ // wrap all validation checks here
+      () => validateUsername(username),
+      () => validateEmail(email),
+      () => validatePassword(password, confirmPassword),
+    ];
+    for (const check of validationChecks) {
+      const res = check();
+      if (res) {
+        handleError(res);
+        return;
+      }
     }
+
     try {
       const response = await axios.post(
         "http://localhost:3001/users/",
