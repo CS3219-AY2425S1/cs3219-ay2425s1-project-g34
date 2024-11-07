@@ -17,9 +17,9 @@ spec:
     spec:
       containers:
         - name: question-service
-          image: question-service # replace with your image
+          image: asia-southeast1-docker.pkg.dev/peerprep-userservice-436407/peerprep/miljyy/question-service:latest
           ports:
-            - name: question-service
+            - name: qn-service
               containerPort: 4000
           volumeMounts:
             - name: google-key
@@ -45,6 +45,9 @@ spec:
                   key: MONGO_URL
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /backend/question-backend/google-key.json
+
+      imagePullSecrets:
+        - name: gcr-json-key
 
       volumes: # defines a volume named google-key to hold secrets
       # create a secret named google-key in namespace peerprep

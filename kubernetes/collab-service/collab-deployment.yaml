@@ -17,9 +17,12 @@ spec:
     spec:
       containers:
         - name: collab-service
-          image: collab-service # replace with your image
+          image: asia-southeast1-docker.pkg.dev/peerprep-userservice-436407/peerprep/miljyy/collab-service:latest
           ports:
-            - name: collab-service-8200
+            - name: collab-svc-8200
               containerPort: 8200
-            - name: collab-service-8201
+            - name: collab-svc-8201
               containerPort: 8201
+
+      imagePullSecrets:
+        - name: gcr-json-key

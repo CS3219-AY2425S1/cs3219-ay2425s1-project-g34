@@ -17,13 +17,14 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: user-service # replace with your image
+          image: asia-southeast1-docker.pkg.dev/peerprep-userservice-436407/peerprep/miljyy/user-service:latest
           ports:
             - name: user-service
               containerPort: 3001
           volumeMounts:
             - name: google-key
               mountPath: /backend/user-backend/googleKey.json
+              subPath: googleKey.json
           env:
             - name: PORT
               value: "3001"
@@ -51,6 +52,9 @@ spec:
 
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /backend/user-backend/googleKey.json
+
+      imagePullSecrets:
+        - name: gcr-json-key
 
       volumes: # defines a volume named google-key to hold secrets
       # create a secret named google-key in namespace peerprep
