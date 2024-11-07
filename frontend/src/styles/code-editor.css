@@ -1,0 +1,30 @@
+.editor-container {
+    display: flex;
+    flex-direction: column;
+    background-color: #FCFCFC;
+    border-radius: 10px;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+  }
+  
+  .editor-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 10px;
+    background-color: #1C1678;
+    border-radius: 10px 10px 0px 0px;
+  }
+
+  .editor-header h2 {
+    margin: 0;
+    color: #FFF;
+    font-size: 16px;
+    word-wrap: break-word;
+    text-align: left;
+  }
+
+  .editor-content {
+    flex: 1;
+    overflow-y: auto;
+  }

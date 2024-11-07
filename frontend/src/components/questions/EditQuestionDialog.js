@@ -20,8 +20,7 @@ const EditQuestion = ({ open, handleClose, question }) => {
       description: question?.description || '',
       topic: question?.topic.join(', ') || '', // Convert array to comma-separated string
       difficulty: question?.difficulty || 'Easy',
-      input: question?.input || '',
-      expected_output: question?.expected_output || '',
+      examples: question?.examples || '',
       images: question?.images?.join(', ') || '', // Assuming images is an array, convert to comma-separated string
       leetcode_link: question?.leetcode_link || ''
     });
@@ -169,30 +168,15 @@ const EditQuestion = ({ open, handleClose, question }) => {
             <TextField
               margin="dense"
               required
-              id="input"
-              name="input"
-              label="Input (max 500 characters)"
+              id="examples"
+              name="examples"
+              label="Examples (max 1000 characters)"
               type="text"
               fullWidth
               multiline
               maxRows={16}
-              inputProps={{ maxLength: 500 }}
-              value={questionData.input}
-              onChange={handleInputChange}
-              className="text-field"
-            />
-            <TextField
-              margin="dense"
-              required
-              id="expected_output"
-              name="expected_output"
-              label="Expected Output (max 500 characters)"
-              type="text"
-              fullWidth
-              multiline
-              maxRows={16}
-              inputProps={{ maxLength: 500 }}
-              value={questionData.expected_output}
+              inputProps={{ maxLength: 1000 }}
+              value={questionData.examples}
               onChange={handleInputChange}
               className="text-field"
             />

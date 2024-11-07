@@ -53,8 +53,7 @@ const CreateQuestion = ({ open, handleClose }) => {
         formData.append('title', formElements.title.value);
         formData.append('description', formElements.description.value);
         formData.append('difficulty', difficulty);
-        formData.append('input', formElements.input.value);
-        formData.append('expected_output', formElements.expected_output.value);
+        formData.append('examples', formElements.examples.value);
         formData.append('leetcode_link', formElements.leetcode_link.value);
 
         // Append image files to formData
@@ -153,27 +152,14 @@ const CreateQuestion = ({ open, handleClose }) => {
                         <TextField
                             margin="dense"
                             required
-                            id="input"
-                            name="input"
-                            label="Input (max 500 characters)"
+                            id="examples"
+                            name="examples"
+                            label="Examples (max 1000 characters)"
                             type="text"
                             fullWidth
                             multiline
                             maxRows={16}
-                            inputProps={{ maxLength: 500 }}
-                            className="text-field"
-                        />
-                        <TextField
-                            margin="dense"
-                            required
-                            id="expected_output"
-                            name="expected_output"
-                            label="Expected Output (max 500 characters)"
-                            type="text"
-                            fullWidth
-                            multiline
-                            maxRows={16}
-                            inputProps={{ maxLength: 500 }}
+                            inputProps={{ maxLength: 1000 }}
                             className="text-field"
                         />
                         <TextField

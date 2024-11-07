@@ -6,8 +6,7 @@ const questionSchema = new mongoose.Schema({
     description: { type: String, required: true }, // store Markdown content so can render images / links
     topic: { type: [String], required: true },
     difficulty: { type: String, required: true },
-    input: { type: mongoose.Schema.Types.Mixed, required: true }, // must check type when using
-    expected_output: { type: mongoose.Schema.Types.Mixed, required: true }, // must check type when using
+    examples: { type: String, required: true },
     images: { type: [String], required: false },
     leetcode_link: { type: String, required: false }
 });
