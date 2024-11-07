@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: question-service
+  namespace: peerprep
+  labels:
+    app: question-service
+spec:
+  selector:
+    app: question-service
+  ports:
+    - name: question-service
+      port: 4000
+      targetPort: 4000
+  type: ClusterIP

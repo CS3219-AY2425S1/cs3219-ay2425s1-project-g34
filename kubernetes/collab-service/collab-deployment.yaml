@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collab-service
+  namespace: peerprep
+  labels:
+    app: collab-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collab-service
+  template:
+    metadata:
+      labels:
+        app: collab-service
+    spec:
+      containers:
+        - name: collab-service
+          image: collab-service # replace with your image
+          ports:
+            - name: collab-service-8200
+              containerPort: 8200
+            - name: collab-service-8201
+              containerPort: 8201

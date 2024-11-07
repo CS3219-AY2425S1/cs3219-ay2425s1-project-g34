@@ -36,6 +36,8 @@ spec:
             - name: USER_AUTH_URL
               value: http://user-service:3001/auth/verify-token
 
+            # create a secret named user-service-secret in namespace peerprep
+            # kubectl create secret generic user-service-secret --from-literal=DB_CLOUD_URI=<mongo_url> --from-literal=JWT_SECRET=<jwt_secret>
             - name: DB_CLOUD_URI
               valueFrom:
                 secretKeyRef:
@@ -51,6 +53,8 @@ spec:
               value: /backend/user-backend/googleKey.json
 
       volumes: # defines a volume named google-key to hold secrets
+      # create a secret named google-key in namespace peerprep
+      # kubectl create secret generic google-key --from-file=backend\user-backend\googleKey.json -n peerprep
         - name: google-key
           secret:
             secretName: google-key

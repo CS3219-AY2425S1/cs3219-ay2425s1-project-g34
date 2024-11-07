@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: question-service
+  namespace: peerprep
+  labels:
+    app: question-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: question-service
+  template:
+    metadata:
+      labels:
+        app: question-service
+    spec:
+      containers:
+        - name: question-service
+          image: question-service # replace with your image
+          ports:
+            - name: question-service
+              containerPort: 4000
+          volumeMounts:
+            - name: google-key
+              mountPath: /backend/question-backend/google-key.json
+          env:
+            - name: PORT
+              value: "4000"
+            - name: NODE_ENV
+              value: production
+            - name: IMAGE_PROJECT_ID
+              value: "peerprep-userservice-436407"
+            - name: IMAGE_BUCKET
+              value: "question-service-images"
+            - name: USER_AUTH_URL
+              value: http://user-service:3001/auth/verify-token
+
+            # create a secret named question-service-secret in namespace peerprep
+            # kubectl create secret generic question-service-secret --from-literal=MONGO_URL=<mongo_url> -n peerprep
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: question-service-secret
+                  key: MONGO_URL
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /backend/question-backend/google-key.json
+
+      volumes: # defines a volume named google-key to hold secrets
+      # create a secret named google-key in namespace peerprep
+      # kubectl create secret generic google-key --from-file=backend\question-backend\google-key.json -n peerprep
+        - name: google-key
+          secret:
+            secretName: google-key
