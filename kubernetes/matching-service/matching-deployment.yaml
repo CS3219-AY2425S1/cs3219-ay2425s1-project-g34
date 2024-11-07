@@ -24,23 +24,12 @@ spec:
           env:
             - name: RABBITMQ_URL
               value: "amqp://localhost:5672"
-          readinessProbe: # Ensures that matching-service is only marked as ready when it is accessible
-            httpGet:
-              path: /health  # Update this path based on your service's health check endpoint
-              port: 3002
-            initialDelaySeconds: 10
-            periodSeconds: 5
 
         - name: rabbitmq  # Sidecar container for RabbitMQ
           image: rabbitmq:management
           ports:
             - containerPort: 5672   # RabbitMQ port for AMQP connections
             - containerPort: 15672  # RabbitMQ management port (optional)
-          env:
-            - name: RABBITMQ_DEFAULT_USER
-              value: "guest"
-            - name: RABBITMQ_DEFAULT_PASS
-              value: "guest"
 
       imagePullSecrets:
         - name: gcr-json-key

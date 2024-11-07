@@ -16,15 +16,23 @@ app.use(express.json());
 let channel, connection;
 let wss;
 
-async function initRabbitMQ() {
-    try {
-        connection = await amqp.connect('amqp://rabbitmq:5672');
-        channel = await connection.createChannel();
-        await channel.assertQueue('matching-queue', { durable: true });
-        console.log('Connected to RabbitMQ');
-        startConsumer(channel, notifyMatch); // Start consumer
-    } catch (error) {
-        console.error('Error connecting to RabbitMQ: ', error);
+async function initRabbitMQ(retries = 5, delay = 5000) {
+    const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
+    while (retries > 0) {
+        try {
+            console.log(`Attempting to connect to RabbitMQ at ${rabbitmqUrl}`);
+            connection = await amqp.connect(rabbitmqUrl);
+            channel = await connection.createChannel();
+            await channel.assertQueue('matching-queue', { durable: true });
+            console.log('Connected to RabbitMQ');
+            startConsumer(channel, notifyMatch); // Start consumer
+            break;  // Exit loop on success
+        } catch (error) {
+            console.error(`Error connecting to RabbitMQ: ${error}. Retrying in ${delay / 1000} seconds...`);
+            retries -= 1;
+            if (retries === 0) throw new Error('Could not connect to RabbitMQ after multiple attempts');
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
 }
 

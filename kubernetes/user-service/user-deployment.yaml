@@ -30,13 +30,14 @@ spec:
               value: "3001"
             - name: NODE_ENV
               value: production
+            - name: ENV
+              value: "PROD"
             - name: IMAGE_PROJECT_ID
               value: "peerprep-userservice-436407"
             - name: IMAGE_BUCKET
               value: "peerprep_userimages"
             - name: USER_AUTH_URL
               value: http://user-service:3001/auth/verify-token
-
             # create a secret named user-service-secret in namespace peerprep
             # kubectl create secret generic user-service-secret --from-literal=DB_CLOUD_URI=<mongo_url> --from-literal=JWT_SECRET=<jwt_secret>
             - name: DB_CLOUD_URI
