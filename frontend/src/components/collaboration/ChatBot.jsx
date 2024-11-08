@@ -14,8 +14,7 @@ const ChatBot = ({ socket, username, messages}) => {
     
         if (messageContent) {
             // Send message to the server
-            socket.emit("bot-chat-message", messageContent);
-            console.log("message from the chatbot.jsx: " + messageContent);
+            socket.emit("bot-chat-message", { username: username, messageContent: messageContent });
             setMessage("");
     
             // Make API call to backend to get chatbot response
@@ -54,7 +53,8 @@ const ChatBot = ({ socket, username, messages}) => {
                             marginBottom: "8px",
                             padding: "10px",
                             borderRadius: "8px",
-                            backgroundColor: msg.username === username ? "#DCF8C6" : "#f1f1f1",
+                            backgroundColor: msg.username === username ? "#DCF8C6" : 
+                                msg.username === 'Chatbot' ? "#f1f1f1" : "#8ff0ff",
                             maxWidth: "80%",
                             color: msg.username === username ? "#000" : "#333",
                         }}

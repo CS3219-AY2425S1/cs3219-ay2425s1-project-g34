@@ -47,6 +47,7 @@ function handleSocketEvents(io) {
 
             // Send existing chat history to the new user
             socket.emit('chat-history', chatHistories.get(roomId));
+            socket.emit('bot-chat-history', botChatHistories.get(roomId));
             
             // Check if both users have joined
             if (getRoomUserCount(roomId) === 2) {
@@ -74,10 +75,11 @@ function handleSocketEvents(io) {
         });
 
         // Handle chatbot messages
-        socket.on('bot-chat-message', async (messageContent) => {
+        socket.on('bot-chat-message', async (message) => {
 
+            const messageContent = message.messageContent;
             const roomId = socket.roomId;
-            const username = socket.username;
+            const username = message.username;
 
             if (!roomId || !username) return;
 
@@ -85,6 +87,7 @@ function handleSocketEvents(io) {
                 username: username,
                 content: String(messageContent),
             };
+            io.to(roomId).emit('bot-chat-message', userMessage);
 
             // Call OpenAI API to get the chatbot's response
             try {
