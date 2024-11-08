@@ -70,6 +70,18 @@ const Collab = () => {
         socketRef.current.emit("add-user", username?.toString());
         socketRef.current.emit("join-room", roomId);
 
+        const getMicPermission = async () => {
+            try {
+                const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                localStreamRef.current = localStream;
+                console.log("Microphone permission granted, localStreamRef populated.");
+            } catch (error) {
+                console.error("Error getting microphone permission:", error);
+            }
+        };
+    
+        getMicPermission();
+
         // Listen for 'start-timer' event to start countdown (used for both new session and continue session)
         socketRef.current.on('start-timer', () => {
             setCountdown(180); // Reset to your desired starting time
@@ -240,6 +252,10 @@ const Collab = () => {
             const peerConnection = new RTCPeerConnection();
             peerConnectionRef.current = peerConnection;
 
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, localStreamRef.current));
+            }
+
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     socketRef.current.emit("voice-candidate", {
@@ -250,101 +266,55 @@ const Collab = () => {
             };
 
             peerConnection.ontrack = (event) => {
-                const incomingStream = event.streams[0];
-            
-                // Check if there's already a playing stream and stop it before replacing
-                if (remoteAudioRef.current.srcObject !== incomingStream) {
-                    remoteAudioRef.current.srcObject = incomingStream;
-            
-                    // Play the audio only if it's not already playing
-                    const playPromise = remoteAudioRef.current.play();
-                    
-                    if (playPromise !== undefined) {
-                        playPromise
-                            .then(() => {
-                                console.log("Audio started playing");
-                            })
-                            .catch((error) => {
-                                console.error("Error playing audio:", error);
-                            });
-                    }
-                }
-            };
-
-            peerConnection.onnegotiationneeded = async () => {
-                try {
-                    const offer = await peerConnection.createOffer();
-                    await peerConnection.setLocalDescription(offer);
-                    socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
-                } catch (error) {
-                    console.error("Error during renegotiation:", error);
-                }
+                remoteAudioRef.current.srcObject = event.streams[0];
+                remoteAudioRef.current.play();
             };
 
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
 
             socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
+            if (localStreamRef.current) {
+                localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = false)); // Start with mic off
+            }
         } catch (error) {
             console.error("Error starting voice chat:", error);
         }
     };
 
     const handleVoiceOffer = async (offer) => {
-        const peerConnection = new RTCPeerConnection();
-        peerConnectionRef.current = peerConnection;
+        try {
+            const peerConnection = new RTCPeerConnection();
+            peerConnectionRef.current = peerConnection;
 
-        if (isMicOn && localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach((track) => {
-                peerConnection.addTrack(track, localStreamRef.current);
-            });
-        }
-
-        peerConnection.onicecandidate = (event) => {
-            if (event.candidate) {
-                socketRef.current.emit("voice-candidate", {
-                    roomId: location.state.roomId,
-                    candidate: event.candidate,
-                });
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, localStreamRef.current));
             }
-        };
 
-        peerConnection.ontrack = (event) => {
-            const incomingStream = event.streams[0];
-        
-            // Check if there's already a playing stream and stop it before replacing
-            if (remoteAudioRef.current.srcObject !== incomingStream) {
-                remoteAudioRef.current.srcObject = incomingStream;
-        
-                // Play the audio only if it's not already playing
-                const playPromise = remoteAudioRef.current.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise
-                        .then(() => {
-                            console.log("Audio started playing");
-                        })
-                        .catch((error) => {
-                            console.error("Error playing audio:", error);
-                        });
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socketRef.current.emit("voice-candidate", {
+                        roomId: location.state.roomId,
+                        candidate: event.candidate,
+                    });
                 }
-            }
-        };
+            };
 
-        peerConnection.onnegotiationneeded = async () => {
-            try {
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
-            } catch (error) {
-                console.error("Error during renegotiation:", error);
-            }
-        };
+            peerConnection.ontrack = (event) => {
+                remoteAudioRef.current.srcObject = event.streams[0];
+                remoteAudioRef.current.play();
+            };
 
-        await peerConnection.setRemoteDescription(offer);
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        socketRef.current.emit("voice-answer", { roomId: location.state.roomId, answer });
+            await peerConnection.setRemoteDescription(offer);
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socketRef.current.emit("voice-answer", { roomId: location.state.roomId, answer });
+            if (localStreamRef.current) {
+                localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = false)); // Start with mic off
+            }
+        } catch (error) {
+            console.error("Error starting voice chat:", error);
+        }
     };
 
     const toggleMic = async () => {
@@ -356,16 +326,15 @@ const Collab = () => {
     };
 
     const micOn = async () => {
-        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        localStreamRef.current = localStream;
-        localStream.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, localStream));
+        if (localStreamRef.current) {
+            localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = true));
+        }
         setIsMicOn(true);
     };
 
     const micOff = () => {
         if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach((track) => track.stop());
-            localStreamRef.current = null;
+            localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = false));
         }
         setIsMicOn(false);
     };
