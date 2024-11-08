@@ -17,6 +17,7 @@ import QuitConfirmationPopup from "../components/collaboration/QuitConfirmationP
 import PartnerQuitPopup from "../components/collaboration/PartnerQuitPopup";
 import TimeUpPopup from "../components/collaboration/TimeUpPopup";
 import ChatBox from "../components/collaboration/ChatBox";
+import ChatBot from "../components/collaboration/ChatBot";
 import CustomTabPanel from "../components/collaboration/CustomTabPanel";
 import { a11yProps } from "../components/collaboration/CustomTabPanel";
 import useAuth from "../hooks/useAuth";
@@ -47,6 +48,7 @@ const Collab = () => {
     const [tabValue, setTabValue] = useState(0);
 
     const [messages, setMessages] = useState([]);
+    const [botmessages, setBotMessages] = useState([]);
 
     // Ensure location state exists, else redirect to home
     useEffect(() => {
@@ -83,6 +85,15 @@ const Collab = () => {
 
         socketRef.current.on("chat-history", (history) => {
             setMessages(history);
+        });
+
+        // Listen for incoming messages and update `messages` state
+        socketRef.current.on("bot-chat-message", (msg) => {
+            setBotMessages((prevMessages) => [...prevMessages, msg]);
+        });
+
+        socketRef.current.on("bot-chat-history", (history) => {
+            setBotMessages(history);
         });
 
         // Clean up on component unmount
@@ -262,7 +273,16 @@ const Collab = () => {
                                         }
                                     }} 
                                 />
-                                
+                                <Tab 
+                                    label="AI Assistant" 
+                                    {...a11yProps(2)} 
+                                    sx={{ 
+                                        color: 'white', 
+                                        fontWeight: 'bold', 
+                                        fontFamily: 'Poppins' ,
+                                        '&:hover': {color: '#fff'} 
+                                    }} 
+                                />
                             </Tabs>
                         </Box>
                         <CustomTabPanel value={tabValue} index={0}>
@@ -270,6 +290,9 @@ const Collab = () => {
                         </CustomTabPanel>
                         <CustomTabPanel value={tabValue} index={1}>
                             <ChatBox socket={socketRef.current} username={username}  messages={messages} />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={tabValue} index={2}>
+                            <ChatBot socket={socketRef.current} username={username}  messages={botmessages}/>
                         </CustomTabPanel>
                     </Box>
                 </div>
