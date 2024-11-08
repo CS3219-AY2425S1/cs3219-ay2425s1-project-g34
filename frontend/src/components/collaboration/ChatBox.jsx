@@ -1,10 +1,12 @@
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
+import HeadsetIcon from '@mui/icons-material/Headset';
+import HeadsetOffIcon from '@mui/icons-material/HeadsetOff';
 import IconButton from '@mui/material/IconButton';
 
 import React, { useState, useEffect, useRef } from "react";
 
-const ChatBox = ({ socket, username, messages, toggleMic, isMicOn}) => {
+const ChatBox = ({ socket, username, messages, toggleMic, isMicOn, toggleMute, isMuted}) => {
     const [message, setMessage] = useState("");
     const chatEndRef = useRef(null);
 
@@ -54,6 +56,9 @@ const ChatBox = ({ socket, username, messages, toggleMic, isMicOn}) => {
             <div style={{ borderRadius: "10px", boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)", display: "flex", padding: "10px" }}>
                 <IconButton onClick={toggleMic} >
                     {isMicOn ? <MicIcon color="primary" /> : <MicOffIcon />}
+                </IconButton>
+                <IconButton onClick={toggleMute}>
+                    {isMuted ? <HeadsetOffIcon /> : <HeadsetIcon color="primary" />}
                 </IconButton>
                 <input
                     type="text"

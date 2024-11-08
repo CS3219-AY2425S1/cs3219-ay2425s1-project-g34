@@ -40,6 +40,7 @@ const Collab = () => {
     const localStreamRef = useRef(null); // Reference for the local media stream
     const remoteAudioRef = useRef(new Audio()); // Audio element to play remote audio
     const [isMicOn, setIsMicOn] = useState(false); // Track the mic status
+    const [isMuted, setIsMuted] = useState(false); // Track the remote audio status
 
     const [countdown, setCountdown] = useState(180); // set to 3 min default timer
     const [timeOver, setTimeOver] = useState(false);
@@ -351,6 +352,13 @@ const Collab = () => {
         setIsMicOn(false);
     };
 
+    const toggleMute = () => {
+        if (remoteAudioRef.current) {
+            remoteAudioRef.current.muted = !remoteAudioRef.current.muted;
+            setIsMuted(!isMuted);
+        }
+    };
+
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
             <CollabNavBar 
@@ -419,6 +427,8 @@ const Collab = () => {
                                 messages={messages} 
                                 toggleMic={toggleMic}
                                 isMicOn={isMicOn}
+                                toggleMute={toggleMute}
+                                isMuted={isMuted}
                             />
                         </CustomTabPanel>
                     </Box>
