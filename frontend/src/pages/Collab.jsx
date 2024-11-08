@@ -4,6 +4,9 @@ import Snackbar from '@mui/material/Snackbar';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
+import IconButton from '@mui/material/IconButton';
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { MonacoBinding } from "y-monaco";
@@ -21,6 +24,7 @@ import CustomTabPanel from "../components/collaboration/CustomTabPanel";
 import { a11yProps } from "../components/collaboration/CustomTabPanel";
 import useAuth from "../hooks/useAuth";
 
+
 const yjsWsUrl = "ws://localhost:8201/yjs";  // y-websocket now on port 8201
 const socketIoUrl = "http://localhost:8200";  // Socket.IO remains on port 8200
 
@@ -34,6 +38,11 @@ const Collab = () => {
     const socketRef = useRef(null);
     const providerRef = useRef(null);
     const intervalRef = useRef(null);
+
+    const peerConnectionRef = useRef(null); // Reference for the peer connection
+    const localStreamRef = useRef(null); // Reference for the local media stream
+    const remoteAudioRef = useRef(new Audio()); // Audio element to play remote audio
+    const [isMicOn, setIsMicOn] = useState(false); // Track the mic status
 
     const [countdown, setCountdown] = useState(180); // set to 3 min default timer
     const [timeOver, setTimeOver] = useState(false);
@@ -85,12 +94,29 @@ const Collab = () => {
             setMessages(history);
         });
 
+        socketRef.current.on("voice-offer", async ({ offer }) => {
+            await handleVoiceOffer(offer);
+        });
+
+        socketRef.current.on("voice-answer", async ({ answer }) => {
+            if (peerConnectionRef.current) {
+                await peerConnectionRef.current.setRemoteDescription(answer);
+            }
+        });
+
+        socketRef.current.on("voice-candidate", async ({ candidate }) => {
+            if (peerConnectionRef.current && candidate) {
+                await peerConnectionRef.current.addIceCandidate(candidate);
+            }
+        });
+
         // Clean up on component unmount
         return () => {
             if (socketRef.current) {
                 socketRef.current.emit("user-left", roomId);
                 socketRef.current.disconnect();
             }
+            stopVoiceChat();
         };
     }, [username, location.state, navigate]);
 
@@ -205,7 +231,90 @@ const Collab = () => {
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
-    }
+    };
+
+    const startVoiceChat = async () => {
+        try {
+            const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            localStreamRef.current = localStream;
+
+            const peerConnection = new RTCPeerConnection();
+            peerConnectionRef.current = peerConnection;
+
+            localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socketRef.current.emit("voice-candidate", {
+                        roomId: location.state.roomId,
+                        candidate: event.candidate,
+                    });
+                }
+            };
+
+            peerConnection.ontrack = (event) => {
+                remoteAudioRef.current.srcObject = event.streams[0];
+                remoteAudioRef.current.play();
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
+            setIsMicOn(true);
+        } catch (error) {
+            console.error("Error starting voice chat:", error);
+        }
+    };
+
+    const handleVoiceOffer = async (offer) => {
+        const peerConnection = new RTCPeerConnection();
+        peerConnectionRef.current = peerConnection;
+
+        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStreamRef.current = localStream;
+        localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                socketRef.current.emit("voice-candidate", {
+                    roomId: location.state.roomId,
+                    candidate: event.candidate,
+                });
+            }
+        };
+
+        peerConnection.ontrack = (event) => {
+            remoteAudioRef.current.srcObject = event.streams[0];
+            remoteAudioRef.current.play();
+        };
+
+        await peerConnection.setRemoteDescription(offer);
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socketRef.current.emit("voice-answer", { roomId: location.state.roomId, answer });
+        setIsMicOn(true);
+    };
+
+    const toggleMic = () => {
+        if (isMicOn) {
+            stopVoiceChat();
+        } else {
+            startVoiceChat();
+        }
+    };
+
+    const stopVoiceChat = () => {
+        if (peerConnectionRef.current) {
+            peerConnectionRef.current.close();
+            peerConnectionRef.current = null;
+        }
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach((track) => track.stop());
+            localStreamRef.current = null;
+        }
+        setIsMicOn(false);
+    };
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
@@ -215,6 +324,11 @@ const Collab = () => {
                 handleSubmit={handleSubmit}
                 handleQuit={handleQuit}
             />
+            <div style={{ display: "flex", justifyContent: "center", margin: "10px" }}>
+                <IconButton onClick={toggleMic} >
+                    {isMicOn ? <MicIcon color="primary" /> : <MicOffIcon />}
+                </IconButton>
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", height: "calc(100vh - 75px)", padding: "10px" }}>
                 <QuestionContainer question={question} />
 
