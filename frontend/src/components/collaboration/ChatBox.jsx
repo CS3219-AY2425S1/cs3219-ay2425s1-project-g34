@@ -1,6 +1,10 @@
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
+import IconButton from '@mui/material/IconButton';
+
 import React, { useState, useEffect, useRef } from "react";
 
-const ChatBox = ({ socket, username, messages}) => {
+const ChatBox = ({ socket, username, messages, toggleMic, isMicOn}) => {
     const [message, setMessage] = useState("");
     const chatEndRef = useRef(null);
 
@@ -48,6 +52,9 @@ const ChatBox = ({ socket, username, messages}) => {
                 <div ref={chatEndRef} />
             </div>
             <div style={{ borderRadius: "10px", boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)", display: "flex", padding: "10px" }}>
+                <IconButton onClick={toggleMic} >
+                    {isMicOn ? <MicIcon color="primary" /> : <MicOffIcon />}
+                </IconButton>
                 <input
                     type="text"
                     placeholder="Type a message..."

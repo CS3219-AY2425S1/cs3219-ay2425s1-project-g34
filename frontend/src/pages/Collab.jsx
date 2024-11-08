@@ -4,9 +4,6 @@ import Snackbar from '@mui/material/Snackbar';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import MicIcon from '@mui/icons-material/Mic';
-import MicOffIcon from '@mui/icons-material/MicOff';
-import IconButton from '@mui/material/IconButton';
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { MonacoBinding } from "y-monaco";
@@ -116,7 +113,7 @@ const Collab = () => {
                 socketRef.current.emit("user-left", roomId);
                 socketRef.current.disconnect();
             }
-            stopVoiceChat();
+            endVoiceChat();
         };
     }, [username, location.state, navigate]);
 
@@ -231,17 +228,17 @@ const Collab = () => {
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
+        if (newValue === 1 && !peerConnectionRef.current) {
+            initializePeerConnection();
+        }
     };
 
-    const startVoiceChat = async () => {
+    const initializePeerConnection = async () => {
         try {
-            const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            localStreamRef.current = localStream;
+            if (peerConnectionRef.current) return;
 
             const peerConnection = new RTCPeerConnection();
             peerConnectionRef.current = peerConnection;
-
-            localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
 
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
@@ -253,15 +250,41 @@ const Collab = () => {
             };
 
             peerConnection.ontrack = (event) => {
-                remoteAudioRef.current.srcObject = event.streams[0];
-                remoteAudioRef.current.play();
+                const incomingStream = event.streams[0];
+            
+                // Check if there's already a playing stream and stop it before replacing
+                if (remoteAudioRef.current.srcObject !== incomingStream) {
+                    remoteAudioRef.current.srcObject = incomingStream;
+            
+                    // Play the audio only if it's not already playing
+                    const playPromise = remoteAudioRef.current.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                console.log("Audio started playing");
+                            })
+                            .catch((error) => {
+                                console.error("Error playing audio:", error);
+                            });
+                    }
+                }
+            };
+
+            peerConnection.onnegotiationneeded = async () => {
+                try {
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
+                } catch (error) {
+                    console.error("Error during renegotiation:", error);
+                }
             };
 
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
 
             socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
-            setIsMicOn(true);
         } catch (error) {
             console.error("Error starting voice chat:", error);
         }
@@ -271,9 +294,11 @@ const Collab = () => {
         const peerConnection = new RTCPeerConnection();
         peerConnectionRef.current = peerConnection;
 
-        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        localStreamRef.current = localStream;
-        localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream));
+        if (isMicOn && localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach((track) => {
+                peerConnection.addTrack(track, localStreamRef.current);
+            });
+        }
 
         peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
@@ -285,26 +310,67 @@ const Collab = () => {
         };
 
         peerConnection.ontrack = (event) => {
-            remoteAudioRef.current.srcObject = event.streams[0];
-            remoteAudioRef.current.play();
+            const incomingStream = event.streams[0];
+        
+            // Check if there's already a playing stream and stop it before replacing
+            if (remoteAudioRef.current.srcObject !== incomingStream) {
+                remoteAudioRef.current.srcObject = incomingStream;
+        
+                // Play the audio only if it's not already playing
+                const playPromise = remoteAudioRef.current.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log("Audio started playing");
+                        })
+                        .catch((error) => {
+                            console.error("Error playing audio:", error);
+                        });
+                }
+            }
+        };
+
+        peerConnection.onnegotiationneeded = async () => {
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
+            } catch (error) {
+                console.error("Error during renegotiation:", error);
+            }
         };
 
         await peerConnection.setRemoteDescription(offer);
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
         socketRef.current.emit("voice-answer", { roomId: location.state.roomId, answer });
-        setIsMicOn(true);
     };
 
-    const toggleMic = () => {
+    const toggleMic = async () => {
         if (isMicOn) {
-            stopVoiceChat();
+            micOff();
         } else {
-            startVoiceChat();
+            micOn();
         }
     };
 
-    const stopVoiceChat = () => {
+    const micOn = async () => {
+        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStreamRef.current = localStream;
+        localStream.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, localStream));
+        setIsMicOn(true);
+    };
+
+    const micOff = () => {
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach((track) => track.stop());
+            localStreamRef.current = null;
+        }
+        setIsMicOn(false);
+    };
+
+    const endVoiceChat = () => {
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
@@ -324,11 +390,6 @@ const Collab = () => {
                 handleSubmit={handleSubmit}
                 handleQuit={handleQuit}
             />
-            <div style={{ display: "flex", justifyContent: "center", margin: "10px" }}>
-                <IconButton onClick={toggleMic} >
-                    {isMicOn ? <MicIcon color="primary" /> : <MicOffIcon />}
-                </IconButton>
-            </div>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", height: "calc(100vh - 75px)", padding: "10px" }}>
                 <QuestionContainer question={question} />
 
@@ -383,7 +444,13 @@ const Collab = () => {
                             <Output editorRef={editorRef} language={language} />
                         </CustomTabPanel>
                         <CustomTabPanel value={tabValue} index={1}>
-                            <ChatBox socket={socketRef.current} username={username}  messages={messages} />
+                            <ChatBox 
+                                socket={socketRef.current} 
+                                username={username}  
+                                messages={messages} 
+                                toggleMic={toggleMic}
+                                isMicOn={isMicOn}
+                            />
                         </CustomTabPanel>
                     </Box>
                 </div>
