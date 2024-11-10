@@ -12,13 +12,26 @@ function normalizeTitle(title) {
 }
 
 function validateQuestionFields(fields) {
-    let { title, description, topic, difficulty, examples, leetcode_link } = fields;
+    let { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases } = fields;
 
     title = title.trim();
     description = description.trim();
     examples.trim();
     difficulty = difficulty.trim();
     leetcode_link = leetcode_link ? leetcode_link.trim() : "";
+
+    // Validate default_code
+    if (!default_code || !default_code.python || !default_code.javascript || !default_code.java) {
+        return { valid: false, message: "Default code for all languages (python, javascript, java) must be provided" };
+    }
+
+    // Validate test_cases format (ensure it's an array and has the necessary properties)
+    if (test_cases && !Array.isArray(test_cases)) {
+        return { valid: false, message: "Test cases must be an array" };
+    }
+    if (test_cases && test_cases.some(test => !test.input || !test.expected_output)) {
+        return { valid: false, message: "Each test case must have input and expected_output" };
+    }
 
     // Check if topic is an array and trim each element (and remove empty strings)
     if (Array.isArray(topic)) {
@@ -30,11 +43,11 @@ function validateQuestionFields(fields) {
     }
 
     // Check if all required fields are provided
-    if (!title || !description || !topic.length || !difficulty || !examples) {
+    if (!title || !description || !topic.length || !difficulty || !test_cases || !default_code) {
         return { valid: false, message: "All fields are required" };
     }
 
-    return { valid: true, data: { title, description, topic, difficulty, examples, leetcode_link } };
+    return { valid: true, data: { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases } };
 }
 
 async function checkExistingQuestion(title) {
@@ -107,8 +120,8 @@ export const createQuestion = [
         if (!validation.valid) {
             return res.status(400).json({ message: validation.message });
         }
-        const { title, description, topic, difficulty, examples, leetcode_link } = validation.data;
-        
+        const { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases } = validation.data;
+
         const imageFiles = req.files;
         let { images } = req.body;
         images = images ? (Array.isArray(images) ? images : [images]) : [];
@@ -129,7 +142,9 @@ export const createQuestion = [
             difficulty,
             examples,
             images: allImages,
-            leetcode_link: leetcode_link || ""
+            leetcode_link: leetcode_link || "",
+            default_code,
+            test_cases: test_cases || []
         });
 
         await saveNewQuestion(newQuestion, res);
@@ -168,7 +183,7 @@ export const updateQuestion = [
     upload.array('imageFiles'),
     async (req, res) => {
         const { id } = req.params;
-        let { images, title, topic } = req.body;
+        let { images, title, topic, default_code, test_cases } = req.body;
         const imageFiles = req.files;
 
         try {
@@ -185,7 +200,7 @@ export const updateQuestion = [
             }
 
             // Validate updated fields
-            const validation = validateQuestionFields({ ...question.toObject(), ...req.body, topic });
+            const validation = validateQuestionFields({ ...question.toObject(), ...req.body, topic, default_code, test_cases });
             if (!validation.valid) {
                 return res.status(400).json({ message: validation.message });
             }
@@ -195,7 +210,7 @@ export const updateQuestion = [
                 const existingQuestion = await checkExistingQuestion(title);
                 if (existingQuestion && existingQuestion.id !== id) {
                     return res.status(409).json({ message: "A question with this title already exists" });
-                }    
+                }
             }
 
             images = images ? (Array.isArray(images) ? images : [images]) : [];
@@ -217,31 +232,6 @@ export const updateQuestion = [
         }
     }
 ];
-
-// Get all questions (with filters)
-export const getAllQuestions = async (req, res) => {
-    try {
-        const { topic, difficulty } = req.query;
-        const filter = {};
-
-        if (topic) {
-            filter.topic = { $all: Array.isArray(topic) ? topic : [topic] };
-        }
-
-        if (difficulty) {
-            filter.difficulty = difficulty;
-        }
-
-        const questions = await Question.find(filter);
-        res.status(200).json(questions);
-    } catch (error) {
-        if (error.name === 'CastError') {
-            res.status(400).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: "Internal Server Error" });
-        }
-    }
-}
 
 // Get a question by ID
 export const getQuestionById = async (req, res) => {

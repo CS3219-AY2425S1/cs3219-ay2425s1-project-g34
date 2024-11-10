@@ -76,16 +76,18 @@ const QuestionDialog = ({ open, question, onClose }) => {
                         }}
                 />
 
-                <ReactMarkdown
-                    children={question.examples}
-                    components={{
-                        p: ({ children }) => (
-                            <Typography variant="body2" sx={{ marginBottom: 2, fontFamily: 'Poppins' }}>
-                                {children}
-                            </Typography>
-                        ),
+                {question.examples && (
+                    <ReactMarkdown
+                        children={question.examples}
+                        components={{
+                            p: ({ children }) => (
+                                <Typography variant="body2" sx={{ marginBottom: 2, fontFamily: 'Poppins' }}>
+                                    {children}
+                                </Typography>
+                            ),
                         }}
-                />
+                    />
+                )}
 
                 {question.images && question.images.length > 0 && (
                     <Box sx={{ marginTop: 2 }}>
