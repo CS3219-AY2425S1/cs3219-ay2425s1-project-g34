@@ -7,20 +7,16 @@ const questionSchema = new mongoose.Schema({
     topic: { type: [String], required: true },
     difficulty: { type: String, required: true },
     default_code: {
-        type: {
-            python: String,
-            javascript: String,
-            java: String
-        }, 
-        required: true
-     },
-    test_cases: {
-        type: [{
-            input: String, // JSON array of inputs
-            expected_output: String // expected output as string
-        }],
-        required: true
+        python: { type: String, required: true },
+        javascript: { type: String, required: true },
+        java: { type: String, required: true }
     },
+    test_cases: [
+        {
+            input: { type: String, required: true },
+            expected_output: { type: String, required: true }
+        }
+    ],
     examples: { type: String, required: false }, // store Markdown content
     images: { type: [String], required: false },
     leetcode_link: { type: String, required: false }
