@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Chip, Autocomplete, FormControl } from '@mui/material';
 import { topics } from '../../assets/topics';
-import ErrorMessage from './ErrorMessageDialog'
+import ErrorMessage from './ErrorMessageDialog';
 import questionService from '../../services/question-service';
 import '../../styles/create-question-dialog.css';
 import useAuth from '../../hooks/useAuth';
@@ -25,6 +25,13 @@ const EditQuestion = ({ open, handleClose, question }) => {
       leetcode_link: question?.leetcode_link || ''
     });
 
+    const [defaultCode, setDefaultCode] = React.useState({
+        python: question?.default_code?.python || '',
+        javascript: question?.default_code?.javascript || '',
+        java: question?.default_code?.java || ''
+    });
+
+    const [testCases, setTestCases] = React.useState(question?.test_cases || []);
     const [imageFiles, setImageFiles] = React.useState([]);
     const [errorOpen, setErrorOpen] = React.useState(false); // State to control error dialog visibility
     const [errorMessage, setErrorMessage] = React.useState(''); // State to store error message
@@ -45,18 +52,42 @@ const EditQuestion = ({ open, handleClose, question }) => {
     const handleImageFilesChange = (event) => {
       setImageFiles(event.target.files);
     };
-    
+
+    const handleDefaultCodeChange = (language, event) => {
+        setDefaultCode({ ...defaultCode, [language]: event.target.value });
+    };
+
+    const handleTestCaseChange = (index, field, value) => {
+        const updatedTestCases = [...testCases];
+        updatedTestCases[index][field] = value;
+        setTestCases(updatedTestCases);
+    };
+
+    const handleAddTestCase = () => {
+        setTestCases([...testCases, { input: '', expected_output: '' }]);
+    };
+
+    const handleRemoveTestCase = (index) => {
+        const updatedTestCases = testCases.filter((_, i) => i !== index);
+        setTestCases(updatedTestCases);
+    };
+
     const handleErrorClose = () => {
       setErrorOpen(false); // Close the error dialog
     };
 
     const handleSubmit = async (event) => {
       event.preventDefault();
+
       const updatedQuestionData = {
           ...questionData,
           topic: questionData.topic.split(',').map((t) => t.trim()), // Convert topics back to array
-          images: questionData.images.split(',').map((img) => img.trim()) // Convert images back to array
+          images: questionData.images.split(',').map((img) => img.trim()), // Convert images back to array
+          default_code: JSON.stringify(defaultCode),
+          test_cases: JSON.stringify(testCases)
       };
+
+      console.log(updatedQuestionData.test_cases)
   
       const formData = new FormData();
       for (const key in updatedQuestionData) {
@@ -165,9 +196,86 @@ const EditQuestion = ({ open, handleClose, question }) => {
                 </MenuItem>
               ))}
             </TextField>
+            {/* Default Code Inputs */}
+            <TextField
+                margin="dense"
+                required
+                id="python_default_code"
+                label="Python Default Code"
+                type="text"
+                fullWidth
+                multiline
+                value={defaultCode.python}
+                onChange={(e) => handleDefaultCodeChange('python', e)}
+                className="text-field"
+            />
+            <TextField
+                margin="dense"
+                required
+                id="javascript_default_code"
+                label="JavaScript Default Code"
+                type="text"
+                fullWidth
+                multiline
+                value={defaultCode.javascript}
+                onChange={(e) => handleDefaultCodeChange('javascript', e)}
+                className="text-field"
+            />
+            <TextField
+                margin="dense"
+                required
+                id="java_default_code"
+                label="Java Default Code"
+                type="text"
+                fullWidth
+                multiline
+                value={defaultCode.java}
+                onChange={(e) => handleDefaultCodeChange('java', e)}
+                className="text-field"
+            />
+            {/* Test Cases */}
+            {testCases.map((testCase, index) => (
+                <div key={index} className="test-case-container">
+                    <TextField
+                        margin="dense"
+                        required
+                        label="Test Case Input"
+                        type="text"
+                        fullWidth
+                        value={testCase.input}
+                        onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
+                        className="text-field"
+                    />
+                    <TextField
+                        margin="dense"
+                        required
+                        label="Test Case Expected Output"
+                        type="text"
+                        fullWidth
+                        value={testCase.expected_output}
+                        onChange={(e) => handleTestCaseChange(index, 'expected_output', e.target.value)}
+                        className="text-field"
+                    />
+                    <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleRemoveTestCase(index)}
+                        className="remove-test-case-button"
+                    >
+                        Remove
+                    </Button>
+                </div>
+            ))}
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAddTestCase}
+                className="add-test-case-button"
+            >
+                Add Test Case
+            </Button>
             <TextField
               margin="dense"
-              required
               id="examples"
               name="examples"
               label="Examples (max 1000 characters)"
@@ -192,6 +300,15 @@ const EditQuestion = ({ open, handleClose, question }) => {
               onChange={handleInputChange}
               className="text-field"
             />
+            <input
+              type="file"
+              id="imageFiles"
+              name="imageFiles"
+              multiple
+              accept="image/jpeg, image/jpg, image/png"
+              onChange={handleImageFilesChange}
+              className="file-input"
+            />
             <TextField
               margin="dense"
               id="leetcode_link"
@@ -203,15 +320,6 @@ const EditQuestion = ({ open, handleClose, question }) => {
               value={questionData.leetcode_link}
               onChange={handleInputChange}
               className="text-field"
-            />
-            <input
-              type="file"
-              id="imageFiles"
-              name="imageFiles"
-              multiple
-              accept="image/jpeg, image/jpg, image/png"
-              onChange={handleImageFilesChange}
-              className="file-input"
             />
           </DialogContent>
           <DialogActions>

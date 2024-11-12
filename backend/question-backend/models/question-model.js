@@ -13,6 +13,7 @@ const questionSchema = new mongoose.Schema({
     },
     test_cases: [
         {
+            _id: false, // Prevent Mongoose from adding an _id field to each subdocument
             input: { type: String, required: true },
             expected_output: { type: String, required: true }
         }

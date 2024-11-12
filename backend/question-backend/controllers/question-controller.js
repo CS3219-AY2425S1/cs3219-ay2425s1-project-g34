@@ -20,9 +20,27 @@ function validateQuestionFields(fields) {
     difficulty = difficulty.trim();
     leetcode_link = leetcode_link ? leetcode_link.trim() : "";
 
+    // Parse default_code
+    if (typeof default_code === 'string') {
+        try {
+            default_code = JSON.parse(default_code);
+        } catch (error) {
+            return { valid: false, message: "Default code must be a valid JSON string" };
+        }
+    }
+
     // Validate default_code
     if (!default_code || !default_code.python || !default_code.javascript || !default_code.java) {
         return { valid: false, message: "Default code for all languages (python, javascript, java) must be provided" };
+    }
+
+    // Parse test_cases
+    if (typeof test_cases === 'string') {
+        try {
+            test_cases = JSON.parse(test_cases);
+        } catch (error) {
+            return { valid: false, message: "Test cases must be a valid JSON string" };
+        }
     }
 
     // Validate test_cases format (ensure it's an array and has the necessary properties)
@@ -199,6 +217,24 @@ export const updateQuestion = [
                 topic = [topic.trim()].filter(t => t !== '');
             }
 
+            // Parse default_code if it's a string
+            if (typeof default_code === 'string') {
+                try {
+                    default_code = JSON.parse(default_code);
+                } catch (error) {
+                    return res.status(400).json({ message: "Default code must be a valid JSON string" });
+                }
+            }
+
+            // Parse test_cases if it's a string
+            if (typeof test_cases === 'string') {
+                try {
+                    test_cases = JSON.parse(test_cases);
+                } catch (error) {
+                    return res.status(400).json({ message: "Test cases must be a valid JSON string" });
+                }
+            }
+
             // Validate updated fields
             const validation = validateQuestionFields({ ...question.toObject(), ...req.body, topic, default_code, test_cases });
             if (!validation.valid) {
@@ -217,7 +253,7 @@ export const updateQuestion = [
             const allImages = await handleImages(images, imageFiles, id);
             await deleteOldImages(question, allImages);
 
-            const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: { ...req.body, topic, images: allImages } }, { new: true });
+            const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: { ...req.body, topic, default_code, test_cases, images: allImages } }, { new: true });
             if (!updatedQuestion) {
                 return res.status(404).json({ message: "Question not found" });
             }
@@ -232,6 +268,31 @@ export const updateQuestion = [
         }
     }
 ];
+
+// Get all questions (with filters)
+export const getAllQuestions = async (req, res) => {
+    try {
+        const { topic, difficulty } = req.query;
+        const filter = {};
+
+        if (topic) {
+            filter.topic = { $all: Array.isArray(topic) ? topic : [topic] };
+        }
+
+        if (difficulty) {
+            filter.difficulty = difficulty;
+        }
+
+        const questions = await Question.find(filter);
+        res.status(200).json(questions);
+    } catch (error) {
+        if (error.name === 'CastError') {
+            res.status(400).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: "Internal Server Error" });
+        }
+    }
+}
 
 // Get a question by ID
 export const getQuestionById = async (req, res) => {
@@ -254,7 +315,6 @@ export const getQuestionById = async (req, res) => {
 }
 
 // Get a question by topic and difficulty
-
 export const getQuestionByTopicAndDifficulty = async (req, res) => {
     const { topic, difficulty, roomId } = req.query;
 
