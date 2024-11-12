@@ -217,23 +217,9 @@ export const updateQuestion = [
                 topic = [topic.trim()].filter(t => t !== '');
             }
 
-            // Parse default_code if it's a string
-            if (typeof default_code === 'string') {
-                try {
-                    default_code = JSON.parse(default_code);
-                } catch (error) {
-                    return res.status(400).json({ message: "Default code must be a valid JSON string" });
-                }
-            }
-
-            // Parse test_cases if it's a string
-            if (typeof test_cases === 'string') {
-                try {
-                    test_cases = JSON.parse(test_cases);
-                } catch (error) {
-                    return res.status(400).json({ message: "Test cases must be a valid JSON string" });
-                }
-            }
+            // Parse default_code and test_cases
+            default_code = typeof default_code === 'string' ? JSON.parse(default_code) : default_code;
+            test_cases = typeof test_cases === 'string' ? JSON.parse(test_cases) : test_cases;
 
             // Validate updated fields
             const validation = validateQuestionFields({ ...question.toObject(), ...req.body, topic, default_code, test_cases });
@@ -337,4 +323,3 @@ export const getQuestionByTopicAndDifficulty = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-
