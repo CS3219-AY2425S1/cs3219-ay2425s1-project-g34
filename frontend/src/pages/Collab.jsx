@@ -23,9 +23,7 @@ import CustomTabPanel from "../components/collaboration/CustomTabPanel";
 import { a11yProps } from "../components/collaboration/CustomTabPanel";
 import useAuth from "../hooks/useAuth";
 
-const yjsWsUrl = "ws://localhost:8201/yjs";  // y-websocket now on port 8201
-const socketIoUrl = "http://localhost:8200";  // Socket.IO remains on port 8200
-
+const { REACT_APP_YJS_WS_URL, REACT_APP_SOCKET_IO_URL } = process.env;
 const Collab = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -62,7 +60,7 @@ const Collab = () => {
         const { roomId } = location.state;
 
         // Setup socket.io connection
-        socketRef.current = io(socketIoUrl);
+        socketRef.current = io(REACT_APP_SOCKET_IO_URL);
 
         // Emit events on connection
         socketRef.current.emit("add-user", username?.toString());
@@ -133,7 +131,7 @@ const Collab = () => {
         const monacoText = ydoc.getText("monaco");
         monacoText.delete(0, monacoText.length);
 
-        providerRef.current = new WebsocketProvider(yjsWsUrl, location.state.roomId, ydoc);
+        providerRef.current = new WebsocketProvider(REACT_APP_YJS_WS_URL, location.state.roomId, ydoc);
         new MonacoBinding(monacoText, editorRef.current.getModel(), new Set([editorRef.current]));
 
         providerRef.current.on('status', (event) => {

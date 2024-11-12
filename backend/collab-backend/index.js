@@ -1,20 +1,22 @@
 const express = require('express');
 const cors = require('cors');
+const dotenv = require('dotenv');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const WebSocket = require('ws');
 const setupWSConnection = require('y-websocket/bin/utils').setupWSConnection;
 const handleSocketEvents = require('./socketHandlers');
 
+dotenv.config();
+
 const app = express();
 app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 
 // Port configurations
-const socketIoPort = 8200;
-const yjsPort = 8201;
+const { SOCKET_IO_PORT, YJS_PORT } = process.env;
 
-// Server setup for Socket.IO on port 8200
+// Server setup for Socket.IO
 const ioServer = createServer(app);
 const io = new Server(ioServer, {
     path: "/socket.io",
@@ -23,11 +25,11 @@ const io = new Server(ioServer, {
 
 handleSocketEvents(io);
 
-ioServer.listen(socketIoPort, () => {
-    console.log(`Socket.IO server listening at http://localhost:${socketIoPort}`);
+ioServer.listen(SOCKET_IO_PORT, () => {
+    console.log(`Socket.IO server listening at http://localhost:${SOCKET_IO_PORT}`);
 });
 
-// Server setup for y-websocket on port 8201
+// Server setup for y-websocket
 const yjsServer = createServer(app);
 const wss = new WebSocket.Server({ noServer: true });
 
@@ -46,6 +48,6 @@ wss.on('connection', (ws, req) => {
     setupWSConnection(ws, req);
 });
 
-yjsServer.listen(yjsPort, () => {
-    console.log(`y-websocket server listening at http://localhost:${yjsPort}`);
+yjsServer.listen(YJS_PORT, () => {
+    console.log(`y-websocket server listening at http://localhost:${YJS_PORT}`);
 });
