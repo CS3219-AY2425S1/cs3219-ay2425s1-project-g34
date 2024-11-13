@@ -26,6 +26,8 @@ spec:
               value: "production"
             - name: USER_AUTH_URL
               value: "http://user-service:3001/auth/verify-token"
+            - name: REACT_APP_API_URL
+              value: "http://35.240.237.167.nip.io"
 
       imagePullSecrets:
         - name: gcr-json-key
