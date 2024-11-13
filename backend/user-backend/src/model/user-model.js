@@ -45,6 +45,10 @@ const UserModelSchema = new Schema({
     type: String,
     required: false,
   },
+  otp: {
+    type: String,
+    required: false,
+  },
   history: {
     type: [String],
     required: true,

@@ -10,7 +10,7 @@ import '../styles/questions.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Questions = () => {
-    const { priviledge } = useAuth();
+    const { privilege } = useAuth();
     const [refresh, setRefresh] = useState(true);
     const toggle = () => setRefresh(!refresh);
 
@@ -24,7 +24,7 @@ const Questions = () => {
                     <div className="table-buttons">
                         <RefreshTableButton trigger={toggle}/>
                         <div className="admin-button">
-                            {priviledge ? <AddQuestionButton /> : null}
+                            {privilege ? <AddQuestionButton /> : null}
                         </div>
                     </div>
                     <QuestionTable mountTrigger={refresh} />

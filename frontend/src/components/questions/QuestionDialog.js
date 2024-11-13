@@ -7,7 +7,7 @@ import DeleteQuestion from "./DeleteQuestionDialog";
 import useAuth from "../../hooks/useAuth";
 
 const QuestionDialog = ({ open, question, onClose }) => {
-    const { priviledge } = useAuth();
+    const { privilege } = useAuth();
 
     const dialogActionsComponent = (
         <DialogActions sx={{ justifyContent: 'flex-end', padding: '16px',  backgroundColor:'#D9D9D9' }}>
@@ -109,7 +109,7 @@ const QuestionDialog = ({ open, question, onClose }) => {
 
             </DialogContent>
 
-            {priviledge ? dialogActionsComponent : null}
+            {privilege ? dialogActionsComponent : null}
         </Dialog>
     );
 };

@@ -39,6 +39,7 @@
   margin-top: 40px;
 }
 
+.send-button:hover,
 .signup-button:hover,
 .login-button:hover {
   background-color: #357ae8;
@@ -52,7 +53,7 @@
 }
 
 .login-link,
-.signup-link {
+.extra-links {
   text-align: center;
   margin-top: 20px;
   margin-bottom: 30px;
@@ -60,7 +61,11 @@
 
 .forgot-password a
 .login-link a,
-.signup-link a {
+.extra-links a {
   color: #4e93f9;
   text-decoration: none;
+}
+
+.verify-image {
+  margin: 5% auto;
 }

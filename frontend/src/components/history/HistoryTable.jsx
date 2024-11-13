@@ -4,7 +4,7 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePag
 import QuestionDialog from './QuestionDialog';
 import CodeDialog from './CodeDialog';
 import questionService from '../../services/question-service';
-import userService from '../../services/user-service';
+import { getUserById, } from '../../services/user-service';
 import historyService from '../../services/history-service';
 import useAuth from "../../hooks/useAuth";
 
@@ -29,7 +29,7 @@ export default function HistoryTable() {
 
   useEffect(() => {
     const fetchUserHistory = async () => {
-      const user = await userService.getUserById(userId, cookies.token);
+      const user = await getUserById(userId, cookies.token);
       const { data } = await axios.post(`http://localhost:3004/bulk`, {
         "ids": user.history,
         withCredentials: true,

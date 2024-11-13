@@ -49,7 +49,6 @@ export async function createUser(req, res) {
       const createdUser = await _createUser(username, email, hashedPassword);
 
       sendEmailVerification(createdUser);
-
       return res.status(201).json({
         message: `Created new user ${username} successfully`,
         data: await formatFullUserResponse(createdUser),

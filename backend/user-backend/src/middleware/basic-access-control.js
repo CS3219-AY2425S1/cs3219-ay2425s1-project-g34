@@ -52,28 +52,6 @@ export async function verifyEmailToken(req, res, next) {
   next();
 }
 
-export async function verifyPasswordToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) {
-    return res.status(400).json({ message: "Missing token" });
-  }
-
-  // request auth header: `Authorization: Bearer + <access_token>`
-  const token = authHeader.split(" ")[1];
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_PASSWORD_VERIFICATION);
-  } catch (err) {
-    return err.name === 'TokenExpiredError'
-      ? res.status(401).json({ message: `Expired token`})
-      : res.status(403).json({ message: `Invalid token`});
-  }
-
-  req.id = decoded.id;
-  req.password = decoded.password;
-  next();
-}
-
 export function verifyIsAdmin(req, res, next) {
   if (req.user.isAdmin) {
     next();

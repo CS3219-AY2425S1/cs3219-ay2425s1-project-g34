@@ -1,0 +1,14 @@
+# Define your application as a service called "user-server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache.
+services:
+  user-server:
+    build:
+      context: . # current directory
+    environment:
+      NODE_ENV: production
+    env_file:
+      .env
+    ports:
+      - 3001:3001
