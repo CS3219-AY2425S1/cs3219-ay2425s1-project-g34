@@ -10,6 +10,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=production
+      - REACT_APP_API_URL=http://user-service:3001
       - USER_AUTH_URL=http://user-service:3001/auth/verify-token
     networks:
       - common-network

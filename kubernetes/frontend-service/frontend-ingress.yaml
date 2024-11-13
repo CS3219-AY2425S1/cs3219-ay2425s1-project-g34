@@ -18,7 +18,14 @@ spec:
                 name: frontend-service
                 port:
                   number: 3000
-          - path: /api/user
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 3001
+          - path: /users
             pathType: Prefix
             backend:
               service:
