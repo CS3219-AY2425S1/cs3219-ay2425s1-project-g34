@@ -257,7 +257,7 @@ const Collab = () => {
                 <QuestionContainer question={question} />
 
                 <div style={{ display: "grid", gridTemplateRows: "3fr 2fr", marginLeft: "10px", rowGap: "10px", overflow: "auto" }}>
-                    <CodeEditor language={language} onMount={handleEditorDidMount} />
+                    <CodeEditor defaultCode={question.default_code[language]} language={language} onMount={handleEditorDidMount} />
 
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ backgroundColor: '#1C1678', borderRadius: '10px 10px 0 0' }}>
