@@ -63,8 +63,10 @@ const Collab = () => {
         socketRef.current = io(REACT_APP_SOCKET_IO_URL);
 
         // Emit events on connection
-        socketRef.current.emit("add-user", username?.toString());
-        socketRef.current.emit("join-room", roomId);
+        if (username && username !== "") {
+            socketRef.current.emit("add-user", username?.toString());
+            socketRef.current.emit("join-room", roomId);
+        }
 
         // Listen for 'start-timer' event to start countdown (used for both new session and continue session)
         socketRef.current.on('start-timer', () => {
@@ -81,6 +83,14 @@ const Collab = () => {
         // Listen for incoming messages and update `messages` state
         socketRef.current.on("chat-message", (msg) => {
             setMessages((prevMessages) => [...prevMessages, msg]);
+        });
+
+        // Listen for room-closed event for clean up
+        socketRef.current.on("room-closed", () => {
+            editorRef.current.getModel().setValue("");
+            ydoc.getText("monaco").delete(0, ydoc.getText("monaco").length);
+            providerRef.current?.destroy();
+            providerRef.current = null;
         });
 
         socketRef.current.on("chat-history", (history) => {
