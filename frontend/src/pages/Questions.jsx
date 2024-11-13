@@ -5,6 +5,7 @@ import QuestionTable from '../components/questions/QuestionTable';
 import AddQuestionButton from '../components/questions/AddQuestionButtons';
 import RefreshTableButton from '../components/questions/refreshTableButton';
 import useAuth from "../hooks/useAuth";
+import { topics } from '../assets/topics';
 
 import '../styles/questions.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -33,9 +34,9 @@ const Questions = () => {
 
                         <select onChange={(e) => setTopicFilter(e.target.value)}>
                             <option value="">All Topics</option>
-                            {/* Populate topics dynamically if needed */}
-                            <option value="Arrays">Arrays</option>
-                            <option value="Graphs">Graphs</option>
+                            {topics.map((topic, index) => (
+                                <option key={index} value={topic}>{topic}</option>
+                            ))}
                         </select>
                         <div className="table-buttons">
                             <RefreshTableButton trigger={toggle}/>
