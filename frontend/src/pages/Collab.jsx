@@ -16,6 +16,7 @@ import QuestionContainer from "../components/collaboration/QuestionContainer";
 import QuitConfirmationPopup from "../components/collaboration/QuitConfirmationPopup";
 import SubmitPopup from "../components/collaboration/SubmitPopup";
 import PartnerQuitPopup from "../components/collaboration/PartnerQuitPopup";
+import Testcases from "../components/collaboration/Testcases";
 import TimeUpPopup from "../components/collaboration/TimeUpPopup";
 import historyService from "../services/history-service";
 import ChatBox from "../components/collaboration/ChatBox";
@@ -283,8 +284,26 @@ const Collab = () => {
                                     }} 
                                 />
                                 <Tab 
-                                    label="ChatBox" 
+                                    label="Testcases" 
                                     {...a11yProps(1)} 
+                                    sx={{ 
+                                        color: 'white', 
+                                        fontWeight: 'bold', 
+                                        fontFamily: 'Poppins' ,
+                                        '&:hover': {
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                        },
+                                        '&.Mui-selected': { 
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                            fontWeight: 'bolder', 
+                                        }
+                                    }} 
+                                />
+                                <Tab 
+                                    label="ChatBox" 
+                                    {...a11yProps(2)} 
                                     sx={{ 
                                         color: 'white', 
                                         fontWeight: 'bold', 
@@ -307,6 +326,9 @@ const Collab = () => {
                             <Output editorRef={editorRef} language={language} />
                         </CustomTabPanel>
                         <CustomTabPanel value={tabValue} index={1}>
+                            <Testcases functionName={question.function_name} testCases={question.test_cases} editorRef={editorRef} language={language} />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={tabValue} index={2}>
                             <ChatBox socket={socketRef.current} username={username}  messages={messages} />
                         </CustomTabPanel>
                     </Box>
