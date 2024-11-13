@@ -59,6 +59,22 @@ function handleSocketEvents(io) {
             // Broadcast message to other users in the room
             io.to(roomId).emit('chat-message', message);
         });
+
+        // Handle WebRTC signaling for voice chat
+        socket.on('voice-offer', ({ offer, roomId }) => {
+            console.log('Received voice offer');
+            socket.to(roomId).emit('voice-offer', { offer });
+        });
+
+        socket.on('voice-answer', ({ answer, roomId }) => {
+            console.log('Received voice answer');
+            socket.to(roomId).emit('voice-answer', { answer });
+        });
+
+        socket.on('voice-candidate', ({ candidate, roomId }) => {
+            console.log('Received voice ICE candidate');
+            socket.to(roomId).emit('voice-candidate', { candidate });
+        });
         
         // Handle disconnection with grace period
         socket.on('disconnect', () => {
