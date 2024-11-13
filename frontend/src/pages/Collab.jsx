@@ -130,14 +130,17 @@ const Collab = () => {
         const { question, language, roomId } = location.state;
         const defaultCode = question.default_code[language] || "";
 
-        editorRef.current.setValue(defaultCode);
-
         const monacoText = ydoc.getText("monaco");
-        monacoText.delete(0, monacoText.length);
-        monacoText.insert(0, defaultCode);
 
         providerRef.current = new WebsocketProvider(REACT_APP_YJS_WS_URL, roomId, ydoc);
         new MonacoBinding(monacoText, editorRef.current.getModel(), new Set([editorRef.current]));
+
+        providerRef.current.on('synced', (isSynced) => {
+            if (isSynced && monacoText.length === 0) {
+                monacoText.insert(0, defaultCode);
+            }
+        });
+    
 
         providerRef.current.on('status', (event) => {
             console.log(event.status); // logs "connected" or "disconnected"
@@ -145,6 +148,7 @@ const Collab = () => {
     };
 
     const [prevHeight, setPrevHeight] = useState(window.innerHeight);
+    
     useEffect(() => {
         // Debounce function to reduce frequency of layout updates
         const debounce = (func, delay) => {
