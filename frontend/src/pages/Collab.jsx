@@ -450,7 +450,15 @@ const Collab = () => {
                                         color: 'white', 
                                         fontWeight: 'bold', 
                                         fontFamily: 'Poppins' ,
-                                        '&:hover': {color: '#fff'} 
+                                        '&:hover': {
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                        },
+                                        '&.Mui-selected': { 
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                            fontWeight: 'bolder', 
+                                        }
                                     }} 
                                 />
                             </Tabs>
