@@ -5,6 +5,7 @@
     flex: 1;
     text-align: left;
     overflow: auto;
+    max-height: 300px;
 }
 
 .testcase-header {
@@ -33,7 +34,7 @@
 }
 
 .testcase-table {
-    margin-top: 20px;
+    margin: 10px;
     width: 100%;
     overflow-x: auto;
 }

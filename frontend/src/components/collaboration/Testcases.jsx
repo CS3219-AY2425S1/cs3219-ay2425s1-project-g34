@@ -8,6 +8,11 @@ const Testcases = ({functionName, testCases, editorRef, language}) => {
     const [loading, setLoading] = useState(false);
 
     const runAllTestcases = async () => {
+        if (language === "java") {
+        alert("Testcases are not supported for Java language yet.\nCOMING SOON!");
+            return;
+        }
+
         const sourceCode = editorRef.current.getValue();
         if (!sourceCode || !testCases || testCases.length == 0) return;
 
