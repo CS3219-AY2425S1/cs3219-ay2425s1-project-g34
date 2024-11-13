@@ -66,7 +66,7 @@ const EditQuestion = ({ open, handleClose, question }) => {
               formData.append(key, updatedQuestionData[key]);
           }
       }
-  
+
       for (let i = 0; i < imageFiles.length; i++) {
           formData.append('imageFiles', imageFiles[i]);
       }

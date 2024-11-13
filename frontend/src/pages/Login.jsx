@@ -102,8 +102,10 @@ const Login = () => {
           <div className="form-group">
             <button type="submit" className="login-button">Login</button>
           </div>
-          <div className="signup-link">
+          <div className="extra-links">
             <span>Don't have an account? <Link to="/signup">Sign up here</Link></span>
+            <br/>
+            <span>Need a new verification link? <Link to="/send-verification">Click here</Link></span>
           </div>
         </form>
     </AuthLayout>

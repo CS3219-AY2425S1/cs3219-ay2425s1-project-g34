@@ -1,0 +1,15 @@
+h1 {
+  color: #1C1678;
+  font-family: Poppins;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  text-align: left;
+  margin-top: 20px;
+}
+
+.history-container {
+  max-width: 1200px;
+  margin: auto;
+}

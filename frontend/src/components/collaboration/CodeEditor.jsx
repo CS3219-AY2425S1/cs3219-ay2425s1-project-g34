@@ -148,7 +148,6 @@ const CodeEditor = ({ language, onMount }) => {
             <div className="editor-content">
                 <Editor
                     theme={theme}
-                    defaultLanguage="python"
                     language={language}
                     onMount={onMount}
                     defaultValue=""

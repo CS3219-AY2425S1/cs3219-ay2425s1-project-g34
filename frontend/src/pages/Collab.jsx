@@ -14,13 +14,16 @@ import CollabNavBar from "../components/navbar/CollabNavbar";
 import Output from "../components/collaboration/Output";
 import QuestionContainer from "../components/collaboration/QuestionContainer";
 import QuitConfirmationPopup from "../components/collaboration/QuitConfirmationPopup";
+import SubmitPopup from "../components/collaboration/SubmitPopup";
 import PartnerQuitPopup from "../components/collaboration/PartnerQuitPopup";
 import TimeUpPopup from "../components/collaboration/TimeUpPopup";
+import historyService from "../services/history-service";
 import ChatBox from "../components/collaboration/ChatBox";
 import ChatBot from "../components/collaboration/ChatBot";
 import CustomTabPanel from "../components/collaboration/CustomTabPanel";
 import { a11yProps } from "../components/collaboration/CustomTabPanel";
 import useAuth from "../hooks/useAuth";
+
 
 const yjsWsUrl = "ws://localhost:8201/yjs";  // y-websocket now on port 8201
 const socketIoUrl = "http://localhost:8200";  // Socket.IO remains on port 8200
@@ -28,17 +31,25 @@ const socketIoUrl = "http://localhost:8200";  // Socket.IO remains on port 8200
 const Collab = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { username } = useAuth();
+    const { username, userId, cookies } = useAuth();
 
     const ydoc = useRef(new Y.Doc()).current;
     const editorRef = useRef(null);
     const socketRef = useRef(null);
     const providerRef = useRef(null);
     const intervalRef = useRef(null);
+    const attemptStatus = useRef('attempted');
+
+    const peerConnectionRef = useRef(null); // Reference for the peer connection
+    const localStreamRef = useRef(null); // Reference for the local media stream
+    const remoteAudioRef = useRef(new Audio()); // Audio element to play remote audio
+    const [isMicOn, setIsMicOn] = useState(false); // Track the mic status
+    const [isMuted, setIsMuted] = useState(false); // Track the remote audio status
 
     const [countdown, setCountdown] = useState(180); // set to 3 min default timer
     const [timeOver, setTimeOver] = useState(false);
 
+    const [showSubmitPopup, setShowSubmitPopup] = useState(false);
     const [showQuitPopup, setShowQuitPopup] = useState(false);
     const [showPartnerQuitPopup, setShowPartnerQuitPopup] = useState(false);
 
@@ -65,6 +76,18 @@ const Collab = () => {
         // Emit events on connection
         socketRef.current.emit("add-user", username?.toString());
         socketRef.current.emit("join-room", roomId);
+
+        const getMicPermission = async () => {
+            try {
+                const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                localStreamRef.current = localStream;
+                console.log("Microphone permission granted, localStreamRef populated.");
+            } catch (error) {
+                console.error("Error getting microphone permission:", error);
+            }
+        };
+    
+        getMicPermission();
 
         // Listen for 'start-timer' event to start countdown (used for both new session and continue session)
         socketRef.current.on('start-timer', () => {
@@ -94,6 +117,21 @@ const Collab = () => {
 
         socketRef.current.on("bot-chat-history", (history) => {
             setBotMessages(history);
+
+        socketRef.current.on("voice-offer", async ({ offer }) => {
+            await handleVoiceOffer(offer);
+        });
+
+        socketRef.current.on("voice-answer", async ({ answer }) => {
+            if (peerConnectionRef.current) {
+                await peerConnectionRef.current.setRemoteDescription(answer);
+            }
+        });
+
+        socketRef.current.on("voice-candidate", async ({ candidate }) => {
+            if (peerConnectionRef.current && candidate) {
+                await peerConnectionRef.current.addIceCandidate(candidate);
+            }
         });
 
         // Clean up on component unmount
@@ -102,6 +140,7 @@ const Collab = () => {
                 socketRef.current.emit("user-left", roomId);
                 socketRef.current.disconnect();
             }
+            endVoiceChat();
         };
     }, [username, location.state, navigate]);
 
@@ -176,14 +215,21 @@ const Collab = () => {
 
     if (!location.state) { return null; }
 
-    const { question, language, matchedUser, roomId } = location.state;
+    const { question, language, matchedUser, roomId, datetime } = location.state;
     const partnerUsername = matchedUser.user1 === username ? matchedUser.user2 : matchedUser.user1;
-
-    const handleSubmit = () => { console.log("Submit code"); };
 
     const handleQuit = () => setShowQuitPopup(true);
 
     const handleQuitConfirm = () => {
+        historyService.updateUserHistory(userId, cookies.token, {
+            roomId,
+            question: question._id,
+            user: userId,
+            partner: partnerUsername,
+            status: attemptStatus.current,
+            datetime: datetime,
+            solution: editorRef.current.getValue(),
+        });
         setShowPartnerQuitPopup(false);
         socketRef.current.emit("user-left", location.state.roomId);
         providerRef.current?.destroy();
@@ -191,6 +237,16 @@ const Collab = () => {
     };
 
     const handleQuitCancel = () => setShowQuitPopup(false);
+
+    const handleSubmit = () => setShowSubmitPopup(true);
+
+    const handleSubmitConfirm = () => {
+        console.log("Submit code");
+        attemptStatus.current = "submitted";
+        handleQuitConfirm(); // invoke quit function
+    };
+
+    const handleSubmitCancel = () => setShowSubmitPopup(false);
 
     const handleContinueSession = () => {
         socketRef.current.emit("continue-session", roomId);
@@ -216,7 +272,123 @@ const Collab = () => {
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
-    }
+        if (newValue === 1 && !peerConnectionRef.current) {
+            initializePeerConnection();
+        }
+    };
+
+    const initializePeerConnection = async () => {
+        try {
+            if (peerConnectionRef.current) return;
+
+            const peerConnection = new RTCPeerConnection();
+            peerConnectionRef.current = peerConnection;
+
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, localStreamRef.current));
+            }
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socketRef.current.emit("voice-candidate", {
+                        roomId: location.state.roomId,
+                        candidate: event.candidate,
+                    });
+                }
+            };
+
+            peerConnection.ontrack = (event) => {
+                remoteAudioRef.current.srcObject = event.streams[0];
+                remoteAudioRef.current.play();
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            socketRef.current.emit("voice-offer", { roomId: location.state.roomId, offer });
+            if (localStreamRef.current) {
+                localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = false)); // Start with mic off
+            }
+        } catch (error) {
+            console.error("Error starting voice chat:", error);
+        }
+    };
+
+    const handleVoiceOffer = async (offer) => {
+        try {
+            const peerConnection = new RTCPeerConnection();
+            peerConnectionRef.current = peerConnection;
+
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, localStreamRef.current));
+            }
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socketRef.current.emit("voice-candidate", {
+                        roomId: location.state.roomId,
+                        candidate: event.candidate,
+                    });
+                }
+            };
+
+            peerConnection.ontrack = (event) => {
+                remoteAudioRef.current.srcObject = event.streams[0];
+                remoteAudioRef.current.play();
+            };
+
+            await peerConnection.setRemoteDescription(offer);
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socketRef.current.emit("voice-answer", { roomId: location.state.roomId, answer });
+            if (localStreamRef.current) {
+                localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = false)); // Start with mic off
+            }
+        } catch (error) {
+            console.error("Error starting voice chat:", error);
+        }
+    };
+
+    const toggleMic = async () => {
+        if (isMicOn) {
+            micOff();
+        } else {
+            micOn();
+        }
+    };
+
+    const micOn = async () => {
+        if (localStreamRef.current) {
+            localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = true));
+        }
+        setIsMicOn(true);
+    };
+
+    const micOff = () => {
+        if (localStreamRef.current) {
+            localStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = false));
+        }
+        setIsMicOn(false);
+    };
+
+    const endVoiceChat = () => {
+        if (peerConnectionRef.current) {
+            peerConnectionRef.current.close();
+            peerConnectionRef.current = null;
+        }
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach((track) => track.stop());
+            localStreamRef.current = null;
+        }
+        setIsMicOn(false);
+    };
+
+    const toggleMute = () => {
+        if (remoteAudioRef.current) {
+            remoteAudioRef.current.muted = !remoteAudioRef.current.muted;
+            setIsMuted(!isMuted);
+        }
+    };
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
@@ -289,7 +461,15 @@ const Collab = () => {
                             <Output editorRef={editorRef} language={language} />
                         </CustomTabPanel>
                         <CustomTabPanel value={tabValue} index={1}>
-                            <ChatBox socket={socketRef.current} username={username}  messages={messages} />
+                            <ChatBox 
+                                socket={socketRef.current} 
+                                username={username}  
+                                messages={messages} 
+                                toggleMic={toggleMic}
+                                isMicOn={isMicOn}
+                                toggleMute={toggleMute}
+                                isMuted={isMuted}
+                            />
                         </CustomTabPanel>
                         <CustomTabPanel value={tabValue} index={2}>
                             <ChatBot socket={socketRef.current} username={username}  messages={botmessages}/>
@@ -298,6 +478,12 @@ const Collab = () => {
                 </div>
 
                 {/* Conditionally render popups */}
+                {showSubmitPopup && (
+                    <SubmitPopup
+                        confirmQuit={handleSubmitConfirm}
+                        cancelQuit={handleSubmitCancel}
+                    />
+                )}
                 {showQuitPopup && (
                     <QuitConfirmationPopup 
                         confirmQuit={handleQuitConfirm} 
