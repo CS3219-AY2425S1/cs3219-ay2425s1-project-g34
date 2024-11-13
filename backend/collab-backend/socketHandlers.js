@@ -22,7 +22,7 @@ function handleSocketEvents(io) {
             console.log(`${username} joined`);
             socket.username = username;
 
-             // Clear any existing disconnect timeout for this user if they reconnect quickly
+            // Clear any existing disconnect timeout for this user if they reconnect quickly
             if (disconnectTimeouts.has(username)) {
                 clearTimeout(disconnectTimeouts.get(username));
                 disconnectTimeouts.delete(username);
@@ -76,7 +76,6 @@ function handleSocketEvents(io) {
 
         // Handle chatbot messages
         socket.on('bot-chat-message', async (message) => {
-
             const messageContent = message.messageContent;
             const roomId = socket.roomId;
             const username = message.username;
@@ -117,6 +116,7 @@ function handleSocketEvents(io) {
                 };
                 io.to(roomId).emit('bot-chat-message', errorMessage);
             }
+        });
 
         // Handle WebRTC signaling for voice chat
         socket.on('voice-offer', ({ offer, roomId }) => {
@@ -153,7 +153,6 @@ function handleSocketEvents(io) {
                         chatHistories.delete(socket.roomId);
                         botChatHistories.delete(socket.roomId);
                     }
-                    
                 }, 10000); // 10 seconds grace period
     
                 disconnectTimeouts.set(socket.username, timeoutId);

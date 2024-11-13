@@ -68,8 +68,6 @@ const Collab = () => {
             return;
         }
 
-        const { roomId } = location.state;
-
         // Setup socket.io connection
         socketRef.current = io(socketIoUrl);
 
@@ -117,6 +115,7 @@ const Collab = () => {
 
         socketRef.current.on("bot-chat-history", (history) => {
             setBotMessages(history);
+        });
 
         socketRef.current.on("voice-offer", async ({ offer }) => {
             await handleVoiceOffer(offer);
@@ -214,7 +213,6 @@ const Collab = () => {
     }, [prevHeight]);
 
     if (!location.state) { return null; }
-
     const { question, language, matchedUser, roomId, datetime } = location.state;
     const partnerUsername = matchedUser.user1 === username ? matchedUser.user2 : matchedUser.user1;
 
