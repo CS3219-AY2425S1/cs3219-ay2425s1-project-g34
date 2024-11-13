@@ -13,6 +13,8 @@ const Questions = () => {
     const { priviledge } = useAuth();
     const [refresh, setRefresh] = useState(true);
     const toggle = () => setRefresh(!refresh);
+    const [difficultyFilter, setDifficultyFilter] = useState('');
+    const [topicFilter, setTopicFilter] = useState('');
 
     return (
         <div>
@@ -20,13 +22,29 @@ const Questions = () => {
             <div className="questions-container">
                 <h1>Questions</h1>
                 <p className="description">View all the questions stored in database.</p>
-                <div className="question-table-container">
-                    <div className="table-buttons">
-                        <RefreshTableButton trigger={toggle}/>
-                        <div className="admin-button">
-                            {priviledge ? <AddQuestionButton /> : null}
+                    {/* Filter options */}
+                    <div className="filters">
+                        <select onChange={(e) => setDifficultyFilter(e.target.value)}>
+                            <option value="">All Difficulties</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+
+                        <select onChange={(e) => setTopicFilter(e.target.value)}>
+                            <option value="">All Topics</option>
+                            {/* Populate topics dynamically if needed */}
+                            <option value="Arrays">Arrays</option>
+                            <option value="Graphs">Graphs</option>
+                        </select>
+                        <div className="table-buttons">
+                            <RefreshTableButton trigger={toggle}/>
+                            <div className="admin-button">
+                                {priviledge ? <AddQuestionButton /> : null}
+                            </div>
                         </div>
                     </div>
+                <div className="question-table-container">
                     <QuestionTable mountTrigger={refresh} />
                 </div>
             </div>
