@@ -6,6 +6,7 @@ const questionSchema = new mongoose.Schema({
     description: { type: String, required: true }, // store Markdown content
     topic: { type: [String], required: true },
     difficulty: { type: String, required: true },
+    function_name: { type: String, required: true },
     default_code: {
         python: { type: String, required: true },
         javascript: { type: String, required: true },

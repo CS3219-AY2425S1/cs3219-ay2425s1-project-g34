@@ -12,13 +12,14 @@ function normalizeTitle(title) {
 }
 
 function validateQuestionFields(fields) {
-    let { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases } = fields;
+    let { title, description, topic, difficulty, examples, leetcode_link, function_name, default_code, test_cases } = fields;
 
     title = title.trim();
     description = description.trim();
     examples.trim();
     difficulty = difficulty.trim();
     leetcode_link = leetcode_link ? leetcode_link.trim() : "";
+    function_name = function_name ? function_name.trim() : "";
 
     // Parse default_code
     if (typeof default_code === 'string') {
@@ -61,11 +62,11 @@ function validateQuestionFields(fields) {
     }
 
     // Check if all required fields are provided
-    if (!title || !description || !topic.length || !difficulty || !test_cases || !default_code) {
+    if (!title || !description || !topic.length || !difficulty || !test_cases || !default_code || !function_name) {
         return { valid: false, message: "All fields are required" };
     }
 
-    return { valid: true, data: { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases } };
+    return { valid: true, data: { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases, function_name } };
 }
 
 async function checkExistingQuestion(title) {
@@ -138,7 +139,7 @@ export const createQuestion = [
         if (!validation.valid) {
             return res.status(400).json({ message: validation.message });
         }
-        const { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases } = validation.data;
+        const { title, description, topic, difficulty, examples, leetcode_link, function_name, default_code, test_cases } = validation.data;
 
         const imageFiles = req.files;
         let { images } = req.body;
@@ -161,6 +162,7 @@ export const createQuestion = [
             examples,
             images: allImages,
             leetcode_link: leetcode_link || "",
+            function_name,
             default_code,
             test_cases: test_cases || []
         });

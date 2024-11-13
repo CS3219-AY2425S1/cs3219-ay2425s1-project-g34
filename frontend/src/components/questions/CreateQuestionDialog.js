@@ -81,6 +81,7 @@ const CreateQuestion = ({ open, handleClose }) => {
         formData.append('difficulty', difficulty);
         formData.append('examples', formElements.examples.value);
         formData.append('leetcode_link', formElements.leetcode_link.value);
+        formData.append('function_name', formElements.function_name.value);
         formData.append('default_code', JSON.stringify(defaultCode));
         formData.append('test_cases', JSON.stringify(testCases));
 
@@ -159,7 +160,6 @@ const CreateQuestion = ({ open, handleClose }) => {
                                 sx={{ width: '100%' }}
                             />
                         </FormControl>
-
                         <TextField
                             margin="dense"
                             fullWidth
@@ -177,6 +177,19 @@ const CreateQuestion = ({ open, handleClose }) => {
                                 </MenuItem>
                             ))}
                         </TextField>
+                        <TextField
+                            autoFocus
+                            required
+                            margin="dense"
+                            id="function_name"
+                            name="function_name"
+                            label="Common Function Name for Solution (max 30 characters)"
+                            type="text"
+                            fullWidth
+                            multiline
+                            inputProps={{ maxLength: 30 }}
+                            className="text-field"
+                        />
                         {/* Default Code Inputs */}
                         <TextField
                             margin="dense"

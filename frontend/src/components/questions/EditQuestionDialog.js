@@ -20,6 +20,7 @@ const EditQuestion = ({ open, handleClose, question }) => {
       description: question?.description || '',
       topic: question?.topic.join(', ') || '', // Convert array to comma-separated string
       difficulty: question?.difficulty || 'Easy',
+      function_name: question?.function_name || '',
       examples: question?.examples || '',
       images: question?.images?.join(', ') || '', // Assuming images is an array, convert to comma-separated string
       leetcode_link: question?.leetcode_link || ''
@@ -196,6 +197,21 @@ const EditQuestion = ({ open, handleClose, question }) => {
                 </MenuItem>
               ))}
             </TextField>
+            <TextField
+              autoFocus
+              required
+              margin="dense"
+              id="function_name"
+              name="function_name"
+              label="Common Function Name for Solution (max 30 characters)"
+              type="text"
+              fullWidth
+              multiline
+              inputProps={{ maxLength: 30 }}
+              value={questionData.function_name}
+              onChange={handleInputChange}
+              className="text-field"
+            />
             {/* Default Code Inputs */}
             <TextField
                 margin="dense"
