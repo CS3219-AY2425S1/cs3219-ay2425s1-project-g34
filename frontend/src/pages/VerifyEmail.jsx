@@ -9,6 +9,7 @@ import AuthLayout from "../components/auth/AuthLayout";
 import '../styles/AuthForm.css';
 
 const VerifyEmail = () => {
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
   const navigate = useNavigate();
   const [result, setResult] = useState(undefined);
   const [statusMessage, setStatusMessage] = useState('Verifying account...');
@@ -18,7 +19,7 @@ const VerifyEmail = () => {
     const token = urlParams.get('token');
 
     axios.post(
-      "http://localhost:3001/auth/verify-email",
+      `${apiUrl}/auth/verify-email`,
       null,
       { 
         headers: { Authorization: `Bearer ${token}` },

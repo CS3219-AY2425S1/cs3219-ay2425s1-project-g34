@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: frontend-ingress
   namespace: peerprep
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
@@ -39,3 +37,4 @@ spec:
                 name: question-service
                 port:
                   number: 4000
+                  number: 3001
