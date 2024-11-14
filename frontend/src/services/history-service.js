@@ -1,7 +1,7 @@
 import axios from 'axios';
 import userService from './user-service';
 
-const BASE_URL = 'http://localhost:3004';
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3004";
 
 const formatDatetime = datetime => {
   const [date, time] = datetime.split(':');
