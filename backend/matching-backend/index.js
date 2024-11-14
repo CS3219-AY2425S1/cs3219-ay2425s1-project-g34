@@ -69,12 +69,14 @@ function notifyMatch(user1, user2, roomId) {
         }));
     }
     if (clients[user2.username]) {
-        clients[user2.username].send(JSON.stringify({
-            matchFound: true,
-            user1: user1.username,
-            user2: user2.username,
-            roomId: roomId
-        }));
+        setTimeout(() => {
+            clients[user2.username].send(JSON.stringify({
+                matchFound: true,
+                user1: user1.username,
+                user2: user2.username,
+                roomId: roomId
+            }));
+        }, 100);
     }
 }
 

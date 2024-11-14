@@ -89,8 +89,12 @@ export async function updateUserVerifyStatusById(userId, isVerified) {
   return await updateUserById(userId, { isVerified });
 }
 
-export async function updateUserTempPasswordById(userId, tempPassword) {
+export async function updateUsertempPasswordById(userId, tempPassword) {
   return await updateUserById(userId, { tempPassword });
+}
+
+export async function updateUserOtpById(userId, otp) {
+  return await updateUserById(userId, { otp });
 }
 
 // =======================  ADDS   ================================ //
@@ -100,7 +104,15 @@ export async function addHistoryById(userId, historyId) {
     userId,
     { $addToSet: { history: historyId }},
     { new: true },  // return the updated user
-  );
+  ); 
+}
+
+export async function deleteOtpAndTempPasswordById(userId) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    { $unset: {otp: '', tempPassword: ''} },
+    { new: true },  // return the updated user
+  ); 
 }
 
 // ======================= DELETES ================================ //

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import userService from './user-service';
+import { addUserHistory } from './user-service';
 
 const BASE_URL = 'http://localhost:3004';
 
@@ -39,7 +39,7 @@ const updateUserHistory = async (userId, token, historyData) => {
 
     console.log(res.data.data);
     console.log(res.data.data._id);
-    await userService.addUserHistory(userId, token, res.data.data._id); // add history id to user's data
+    await addUserHistory(userId, token, res.data.data._id); // add history id to user's data
 
   } catch (error) {
     console.log(error);

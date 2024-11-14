@@ -11,7 +11,7 @@ import '../styles/questions.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Questions = () => {
-    const { priviledge } = useAuth();
+    const { privilege } = useAuth();
     const [refresh, setRefresh] = useState(true);
     const toggle = () => setRefresh(!refresh);
     const [difficultyFilter, setDifficultyFilter] = useState('');

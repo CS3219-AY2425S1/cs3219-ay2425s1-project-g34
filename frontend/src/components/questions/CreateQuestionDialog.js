@@ -21,6 +21,13 @@ const CreateQuestion = ({ open, handleClose }) => {
     const [errorMessage, setErrorMessage] = React.useState(''); // State to store error message
     const [selectedTopics, setSelectedTopics] = React.useState([]); // State to store selected topics
 
+    const [defaultCode, setDefaultCode] = React.useState({
+        python: '',
+        javascript: '',
+        java: ''
+    });
+    const [testCases, setTestCases] = React.useState([]);
+
     const handleDifficultyChange = (event) => {
         setDifficulty(event.target.value);
     };
@@ -31,6 +38,25 @@ const CreateQuestion = ({ open, handleClose }) => {
 
     const handleTopicChange = (event, newValue) => {
         setSelectedTopics(newValue);
+    };
+
+    const handleTestCaseChange = (index, field, value) => {
+        const updatedTestCases = [...testCases];
+        updatedTestCases[index][field] = value;
+        setTestCases(updatedTestCases);
+    };
+
+    const handleAddTestCase = () => {
+        setTestCases([...testCases, { input: '', expected_output: '' }]);
+    };
+
+    const handleRemoveTestCase = (index) => {
+        const updatedTestCases = testCases.filter((_, i) => i !== index);
+        setTestCases(updatedTestCases);
+    };
+
+    const handleDefaultCodeChange = (language, event) => {
+        setDefaultCode({ ...defaultCode, [language]: event.target.value });
     };
 
     const handleErrorClose = () => {
@@ -55,6 +81,9 @@ const CreateQuestion = ({ open, handleClose }) => {
         formData.append('difficulty', difficulty);
         formData.append('examples', formElements.examples.value);
         formData.append('leetcode_link', formElements.leetcode_link.value);
+        formData.append('function_name', formElements.function_name.value);
+        formData.append('default_code', JSON.stringify(defaultCode));
+        formData.append('test_cases', JSON.stringify(testCases));
 
         // Append image files to formData
         for (let i = 0; i < imageFiles.length; i++) {
@@ -131,7 +160,6 @@ const CreateQuestion = ({ open, handleClose }) => {
                                 sx={{ width: '100%' }}
                             />
                         </FormControl>
-
                         <TextField
                             margin="dense"
                             fullWidth
@@ -150,8 +178,98 @@ const CreateQuestion = ({ open, handleClose }) => {
                             ))}
                         </TextField>
                         <TextField
+                            autoFocus
+                            required
+                            margin="dense"
+                            id="function_name"
+                            name="function_name"
+                            label="Common Function Name for Solution (max 30 characters)"
+                            type="text"
+                            fullWidth
+                            multiline
+                            inputProps={{ maxLength: 30 }}
+                            className="text-field"
+                        />
+                        {/* Default Code Inputs */}
+                        <TextField
                             margin="dense"
                             required
+                            id="python_default_code"
+                            label="Python Default Code"
+                            type="text"
+                            fullWidth
+                            multiline
+                            value={defaultCode.python}
+                            onChange={(e) => handleDefaultCodeChange('python', e)}
+                            className="text-field"
+                        />
+                        <TextField
+                            margin="dense"
+                            required
+                            id="javascript_default_code"
+                            label="JavaScript Default Code"
+                            type="text"
+                            fullWidth
+                            multiline
+                            value={defaultCode.javascript}
+                            onChange={(e) => handleDefaultCodeChange('javascript', e)}
+                            className="text-field"
+                        />
+                        <TextField
+                            margin="dense"
+                            required
+                            id="java_default_code"
+                            label="Java Default Code"
+                            type="text"
+                            fullWidth
+                            multiline
+                            value={defaultCode.java}
+                            onChange={(e) => handleDefaultCodeChange('java', e)}
+                            className="text-field"
+                        />
+                        {/* Test Cases */}
+                        {testCases.map((testCase, index) => (
+                            <div key={index} className="test-case-container">
+                                <TextField
+                                    margin="dense"
+                                    required
+                                    label="Test Case Input"
+                                    type="text"
+                                    fullWidth
+                                    value={testCase.input}
+                                    onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
+                                    className="text-field"
+                                />
+                                <TextField
+                                    margin="dense"
+                                    required
+                                    label="Test Case Expected Output"
+                                    type="text"
+                                    fullWidth
+                                    value={testCase.expected_output}
+                                    onChange={(e) => handleTestCaseChange(index, 'expected_output', e.target.value)}
+                                    className="text-field"
+                                />
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={() => handleRemoveTestCase(index)}
+                                    className="remove-test-case-button"
+                                >
+                                    Remove
+                                </Button>
+                            </div>
+                        ))}
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleAddTestCase}
+                            className="add-test-case-button"
+                        >
+                            Add Test Case
+                        </Button>
+                        <TextField
+                            margin="dense"
                             id="examples"
                             name="examples"
                             label="Examples (max 1000 characters)"

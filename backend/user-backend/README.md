@@ -347,9 +347,6 @@
     ```
  
 - Responses:
-
-    | Response Code               | Explanation                             |
-    |-----------------------------|-----------------------------------------|
     | 200 (OK)                    | Email successfully sent                 |
     | 400 (Bad Request)           | Missing field for email                 |
     | 404 (Account not found)     | Account associated with email not found |
@@ -371,10 +368,57 @@
     ```
  
 - Responses:
-
     | Response Code               | Explanation                             |
     |-----------------------------|-----------------------------------------|
     | 200 (OK)                    | Verification sent                       |
     | 400 (Bad Request)           | Missing fields or invalid password      |
     | 404 (Account not found)     | Account associated with email not found |
     | 500 (Internal Server Error) | Database or server error                |
+
+### Verify password change OTP
+
+- This endpoint allows one to verify the OTP for password change for account corresponding to the provided email.
+- HTTP Method: `POST`
+- Endpoint: http://localhost:3001/auth/forget-password/confirm-otp
+- Body
+  - Required: one `email` (string) and one `otp` (string)
+
+    ```json
+    {
+      "emai": "example@gmail.com",
+      "otp": "169420"
+    }
+    ```
+ 
+- Responses:
+    | Response Code               | Explanation                             |
+    |-----------------------------|-----------------------------------------|
+    | 200 (OK)                    | Verification sent                       |
+    | 400 (Bad Request)           | Missing required field(s)               |
+    | 401 (Unauthorized)          | Expired OTP                             |
+    | 403 (Forbidden)             | Incorrect OTP                           |
+    | 404 (Account not found)     | Account associated with email not found |
+    | 500 (Internal Server Error) | Database or server error                |
+
+### Resend OTP for password change
+
+- This endpoint allows one to request for a new OTP for password change.
+- HTTP Method: `POST`
+- Endpoint: http://localhost:3001/auth/forget-password/resend-otp
+- Body
+  - Required: one `email` (string)
+
+    ```json
+    {
+      "emai": "example@gmail.com",
+    }
+    ```
+ 
+- Responses:
+    | Response Code               | Explanation                                    |
+    |-----------------------------|------------------------------------------------|
+    | 200 (OK)                    | Verification sent                              |
+    | 400 (Bad Request)           | Missing email field                            |
+    | 404 (Not found)             | Account with specified email not found         |
+    | 405 (Not allowed)           | No OTP was sent initially, or was already used |
+    | 500 (Internal Server Error) | Database or server error                       |

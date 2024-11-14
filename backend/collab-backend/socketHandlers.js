@@ -1,9 +1,18 @@
+require('dotenv').config();
+
+const { OpenAI } = require('openai');
 const { addContinueVote } = require('./sessionManager');
 const { addUserToRoom, removeUserFromRoom, getRoomUserCount, cleanupRoom } = require('./roomManager');
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // Make sure your OpenAI key is set
+});
 
 function handleSocketEvents(io) {
     const disconnectTimeouts = new Map(); // Store timeout references for each user
     const chatHistories = new Map(); // Temporary in-memory storage for chat histories per room
+    const botChatHistories = new Map();
 
     io.on('connection', (socket) => {
         console.log('Socket.IO client connected');
@@ -13,7 +22,7 @@ function handleSocketEvents(io) {
             console.log(`${username} joined`);
             socket.username = username;
 
-             // Clear any existing disconnect timeout for this user if they reconnect quickly
+            // Clear any existing disconnect timeout for this user if they reconnect quickly
             if (disconnectTimeouts.has(username)) {
                 clearTimeout(disconnectTimeouts.get(username));
                 disconnectTimeouts.delete(username);
@@ -32,9 +41,14 @@ function handleSocketEvents(io) {
                 chatHistories.set(roomId, []);
             }
 
+            if (!botChatHistories.has(roomId)) {
+                botChatHistories.set(roomId, []);
+            }
+
             // Send existing chat history to the new user
             socket.emit('chat-history', chatHistories.get(roomId));
-
+            socket.emit('bot-chat-history', botChatHistories.get(roomId));
+            
             // Check if both users have joined
             if (getRoomUserCount(roomId) === 2) {
                 io.to(roomId).emit('start-timer');
@@ -59,6 +73,66 @@ function handleSocketEvents(io) {
             // Broadcast message to other users in the room
             io.to(roomId).emit('chat-message', message);
         });
+
+        // Handle chatbot messages
+        socket.on('bot-chat-message', async (message) => {
+            const messageContent = message.messageContent;
+            const roomId = socket.roomId;
+            const username = message.username;
+
+            if (!roomId || !username) return;
+
+            const userMessage = {
+                username: username,
+                content: String(messageContent),
+            };
+            io.to(roomId).emit('bot-chat-message', userMessage);
+
+            // Call OpenAI API to get the chatbot's response
+            try {
+                const response = await openai.chat.completions.create({
+                    model: 'gpt-3.5-turbo', // Or use whichever model you prefer, e.g., gpt-3.5-turbo
+                    messages: [
+                        { role: 'system', content: 'You are a helpful assistant.' },
+                        { role: 'user', content: messageContent },
+                    ],
+                });
+
+                const botMessage = {
+                    username: 'Chatbot',
+                    content: response.choices[0].message.content, // Response from OpenAI
+                };
+
+                botChatHistories.get(roomId).push(botMessage.content);
+                botChatHistories.get(roomId).push(userMessage);
+                // Broadcast the bot's message to other users in the room
+                io.to(roomId).emit('bot-chat-message', botMessage);
+
+            } catch (error) {
+                console.error('Error fetching OpenAI response:', error);
+                const errorMessage = {
+                    username: 'Bot (SocketHandler)',
+                    content: 'Sorry, I encountered an error while processing your message.',
+                };
+                io.to(roomId).emit('bot-chat-message', errorMessage);
+            }
+        });
+
+        // Handle WebRTC signaling for voice chat
+        socket.on('voice-offer', ({ offer, roomId }) => {
+            console.log('Received voice offer');
+            socket.to(roomId).emit('voice-offer', { offer });
+        });
+
+        socket.on('voice-answer', ({ answer, roomId }) => {
+            console.log('Received voice answer');
+            socket.to(roomId).emit('voice-answer', { answer });
+        });
+
+        socket.on('voice-candidate', ({ candidate, roomId }) => {
+            console.log('Received voice ICE candidate');
+            socket.to(roomId).emit('voice-candidate', { candidate });
+        });
         
         // Handle disconnection with grace period
         socket.on('disconnect', () => {
@@ -76,9 +150,10 @@ function handleSocketEvents(io) {
                     // If room is empty, clean up the room
                     if (roomIsEmpty) {
                         cleanupRoom(socket.roomId);
+                        io.to(socket.roomId).emit('room-closed');
                         chatHistories.delete(socket.roomId);
+                        botChatHistories.delete(socket.roomId);
                     }
-                    
                 }, 10000); // 10 seconds grace period
     
                 disconnectTimeouts.set(socket.username, timeoutId);

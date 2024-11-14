@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   frontend-service:
     build: ./frontend
@@ -74,6 +72,8 @@ services:
     volumes:
       - ./backend/collab-backend:/app
       - /app/node_modules
+    env_file:
+      - ./backend/collab-backend/.env
     networks:
       - common-network
 
