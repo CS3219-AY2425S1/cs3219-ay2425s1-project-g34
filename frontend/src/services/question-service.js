@@ -1,7 +1,7 @@
 import axios from 'axios';
 import QuestionNotFoundError from '../errors/QuestionNotFoundError';
 
-const BASE_URL = 'http://localhost:4000/api/questions';
+const BASE_URL = process.env.REACT_APP_QUESTION_API_URL || 'http://localhost:4000/api/questions';
 
 // Reformat and log error
 const reformatError = (action, error) => {

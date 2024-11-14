@@ -32,3 +32,10 @@ spec:
                 name: user-service
                 port:
                   number: 3001
+          - path: /api/questions
+            pathType: Prefix
+            backend:
+              service:
+                name: question-service
+                port:
+                  number: 4000
