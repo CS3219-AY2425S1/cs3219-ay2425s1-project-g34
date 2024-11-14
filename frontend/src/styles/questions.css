@@ -1,3 +1,28 @@
+.filters select {
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #1C1678;
+    padding: 8px 12px;
+    border: 2px solid #1C1678;
+    border-radius: 8px;
+    background-color: #F7F7F7;
+    margin-right: 10px; /* Spacing between filters */
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.filters select:focus {
+    border-color: #41AFFF; /* Add a subtle border change on focus */
+}
+
+.filters {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Consistent spacing between dropdowns */
+    margin-top: 20px;
+}
+
 h1 {
     color: #1C1678;
     font-family: Poppins;
@@ -32,9 +57,10 @@ h1 {
 
 .table-buttons {
     display: flex;
-    position: absolute;
-    top: -90px; /* Adjust as needed */
-    right: 0;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px; /* Space between buttons */
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .admin-button {
