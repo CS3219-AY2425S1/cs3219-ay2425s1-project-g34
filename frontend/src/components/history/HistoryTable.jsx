@@ -25,12 +25,13 @@ export default function HistoryTable() {
   const [open, setOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [selectedSolution, setSelectedSolution] = useState(null);
-  
+
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3004";
 
   useEffect(() => {
     const fetchUserHistory = async () => {
       const user = await userService.getUserById(userId, cookies.token);
-      const { data } = await axios.post(`http://localhost:3004/bulk`, {
+      const { data } = await axios.post(`${apiUrl}/bulk`, {
         "ids": user.history,
         withCredentials: true,
       });
