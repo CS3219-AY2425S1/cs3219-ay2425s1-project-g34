@@ -1,10 +1,9 @@
 
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Button } from '@mui/material';
 import ErrorMessage from './ErrorMessageDialog'
 import QuestionDialog from './QuestionDialog';
-import questionService from '../../services/question-service';
 import useAuth from '../../hooks/useAuth';
 
 const columns = [
@@ -15,7 +14,7 @@ const columns = [
   { id: 'status', label: 'Status', minWidth: 100 }
 ];
 
-export default function QuestionTable({ mountTrigger }) {
+export default function QuestionTable({ questions }) {
   const { cookies } = useAuth();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -29,28 +28,11 @@ export default function QuestionTable({ mountTrigger }) {
     setPage(0);
   };
 
-  const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true); // Loading state
   const [open, setOpen] = useState(false);
   const [errorOpen, setErrorOpen] = React.useState(false); // State to control error dialog visibility
   const [errorMessage, setErrorMessage] = React.useState(''); // State to store error message
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-
-  // Fetch questions from backend when component mounts
-  useEffect(() => {
-      const fetchQuestions = async () => {
-        try {
-          const response = await questionService.getAllQuestions(cookies);
-          setQuestions(response);
-        } catch (error) {
-            setErrorMessage(error.message); // Set error message
-            setErrorOpen(true); // Open error dialog
-        } finally {
-            setLoading(false);
-        }
-      };
-      fetchQuestions(); // Trigger the fetch
-  }, [mountTrigger]);
 
   const handleQuestionClick = (question) => {
     setSelectedQuestion(question); 

@@ -100,9 +100,18 @@ const getQuestionByTopicAndDifficulty = async (topic, difficulty, roomId, cookie
 };
 
 // Filter questions by specific category (topic / difficulty)
-const filterQuestions = async (category, filter) => {
+const filterQuestions = async (topicFilter, difficultyFilter, cookies) => {
     try {
-        const response = await axios.get(`${BASE_URL}?${category}=${filter}`);
+        let query = [];
+        if (topicFilter) query.push(`topic=${topicFilter}`);
+        if (difficultyFilter) query.push(`difficulty=${difficultyFilter}`);
+        const queryString = query.length ? `?${query.join('&')}` : '';
+        const response = await axios.get(`${BASE_URL}${queryString}`, {
+            headers: {
+                Authorization: `Bearer ${cookies.token}`
+            },
+            withCredentials: true
+        });
         return response.data;
     } catch (error) {
         console.error('Error filtering questions:', error);
