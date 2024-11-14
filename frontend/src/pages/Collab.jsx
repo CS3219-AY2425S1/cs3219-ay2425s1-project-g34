@@ -19,6 +19,7 @@ import PartnerQuitPopup from "../components/collaboration/PartnerQuitPopup";
 import TimeUpPopup from "../components/collaboration/TimeUpPopup";
 import historyService from "../services/history-service";
 import ChatBox from "../components/collaboration/ChatBox";
+import ChatBot from "../components/collaboration/ChatBot";
 import CustomTabPanel from "../components/collaboration/CustomTabPanel";
 import { a11yProps } from "../components/collaboration/CustomTabPanel";
 import useAuth from "../hooks/useAuth";
@@ -58,6 +59,7 @@ const Collab = () => {
     const [tabValue, setTabValue] = useState(0);
 
     const [messages, setMessages] = useState([]);
+    const [botmessages, setBotMessages] = useState([]);
 
     // Ensure location state exists, else redirect to home
     useEffect(() => {
@@ -65,8 +67,6 @@ const Collab = () => {
             navigate("/home");
             return;
         }
-
-        const { roomId } = location.state;
 
         // Setup socket.io connection
         socketRef.current = io(socketIoUrl);
@@ -106,6 +106,15 @@ const Collab = () => {
 
         socketRef.current.on("chat-history", (history) => {
             setMessages(history);
+        });
+
+        // Listen for incoming messages and update `messages` state
+        socketRef.current.on("bot-chat-message", (msg) => {
+            setBotMessages((prevMessages) => [...prevMessages, msg]);
+        });
+
+        socketRef.current.on("bot-chat-history", (history) => {
+            setBotMessages(history);
         });
 
         socketRef.current.on("voice-offer", async ({ offer }) => {
@@ -204,7 +213,6 @@ const Collab = () => {
     }, [prevHeight]);
 
     if (!location.state) { return null; }
-
     const { question, language, matchedUser, roomId, datetime } = location.state;
     const partnerUsername = matchedUser.user1 === username ? matchedUser.user2 : matchedUser.user1;
 
@@ -435,7 +443,24 @@ const Collab = () => {
                                         }
                                     }} 
                                 />
-                                
+                                <Tab 
+                                    label="AI Assistant" 
+                                    {...a11yProps(2)} 
+                                    sx={{ 
+                                        color: 'white', 
+                                        fontWeight: 'bold', 
+                                        fontFamily: 'Poppins' ,
+                                        '&:hover': {
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                        },
+                                        '&.Mui-selected': { 
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                            fontWeight: 'bolder', 
+                                        }
+                                    }} 
+                                />
                             </Tabs>
                         </Box>
                         <CustomTabPanel value={tabValue} index={0}>
@@ -451,6 +476,9 @@ const Collab = () => {
                                 toggleMute={toggleMute}
                                 isMuted={isMuted}
                             />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={tabValue} index={2}>
+                            <ChatBot socket={socketRef.current} username={username}  messages={botmessages}/>
                         </CustomTabPanel>
                     </Box>
                 </div>
