@@ -1,0 +1,73 @@
+.testcase-container {
+    background-color: #FCFCFC;
+    border-radius: 10px;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    flex: 1;
+    text-align: left;
+    overflow: auto;
+    max-height: 300px;
+}
+
+.testcase-header {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.test-button {
+    font-family: Poppins, sans-serif;
+    font-size: 16px;
+    background-color: #7bc9ff;
+    color: black;
+    font-weight: bold;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: -2px;
+}
+
+.test-button:hover {
+    background-color: #357ae8;
+    color: white;
+}
+
+.testcase-table {
+    margin: 10px;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.testcase-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.testcase-table th, .testcase-table td {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.testcase-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.testcase-table td {
+    background-color: #fff;
+}
+
+.testcase-table td {
+    font-size: 14px;
+}
+
+.testcase-table .input, .testcase-table .expected-output, .testcase-table .actual-output {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

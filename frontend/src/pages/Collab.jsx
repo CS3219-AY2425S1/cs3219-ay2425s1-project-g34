@@ -16,6 +16,7 @@ import QuestionContainer from "../components/collaboration/QuestionContainer";
 import QuitConfirmationPopup from "../components/collaboration/QuitConfirmationPopup";
 import SubmitPopup from "../components/collaboration/SubmitPopup";
 import PartnerQuitPopup from "../components/collaboration/PartnerQuitPopup";
+import Testcases from "../components/collaboration/Testcases";
 import TimeUpPopup from "../components/collaboration/TimeUpPopup";
 import historyService from "../services/history-service";
 import ChatBox from "../components/collaboration/ChatBox";
@@ -24,9 +25,7 @@ import CustomTabPanel from "../components/collaboration/CustomTabPanel";
 import { a11yProps } from "../components/collaboration/CustomTabPanel";
 import useAuth from "../hooks/useAuth";
 
-
-const yjsWsUrl = "ws://localhost:8201/yjs";  // y-websocket now on port 8201
-const socketIoUrl = "http://localhost:8200";  // Socket.IO remains on port 8200
+const { REACT_APP_YJS_WS_URL, REACT_APP_SOCKET_IO_URL } = process.env;
 
 const Collab = () => {
     const navigate = useNavigate();
@@ -69,11 +68,13 @@ const Collab = () => {
         }
 
         // Setup socket.io connection
-        socketRef.current = io(socketIoUrl);
+        socketRef.current = io(REACT_APP_SOCKET_IO_URL);
 
         // Emit events on connection
-        socketRef.current.emit("add-user", username?.toString());
-        socketRef.current.emit("join-room", roomId);
+        if (username && username !== "") {
+            socketRef.current.emit("add-user", username?.toString());
+            socketRef.current.emit("join-room", roomId);
+        }
 
         const getMicPermission = async () => {
             try {
@@ -102,6 +103,14 @@ const Collab = () => {
         // Listen for incoming messages and update `messages` state
         socketRef.current.on("chat-message", (msg) => {
             setMessages((prevMessages) => [...prevMessages, msg]);
+        });
+
+        // Listen for room-closed event for clean up
+        socketRef.current.on("room-closed", () => {
+            editorRef.current.getModel().setValue("");
+            ydoc.getText("monaco").delete(0, ydoc.getText("monaco").length);
+            providerRef.current?.destroy();
+            providerRef.current = null;
         });
 
         socketRef.current.on("chat-history", (history) => {
@@ -173,13 +182,21 @@ const Collab = () => {
     // Initialize editor and Yjs 
     const handleEditorDidMount = (editor) => {
         editorRef.current = editor;
-        editorRef.current.setValue("");
+
+        const { question, language, roomId } = location.state;
+        const defaultCode = question.default_code[language] || "";
 
         const monacoText = ydoc.getText("monaco");
-        monacoText.delete(0, monacoText.length);
 
-        providerRef.current = new WebsocketProvider(yjsWsUrl, location.state.roomId, ydoc);
+        providerRef.current = new WebsocketProvider(REACT_APP_YJS_WS_URL, roomId, ydoc);
         new MonacoBinding(monacoText, editorRef.current.getModel(), new Set([editorRef.current]));
+
+        providerRef.current.on('synced', (isSynced) => {
+            if (isSynced && monacoText.length === 0) {
+                monacoText.insert(0, defaultCode);
+            }
+        });
+    
 
         providerRef.current.on('status', (event) => {
             console.log(event.status); // logs "connected" or "disconnected"
@@ -187,6 +204,7 @@ const Collab = () => {
     };
 
     const [prevHeight, setPrevHeight] = useState(window.innerHeight);
+    
     useEffect(() => {
         // Debounce function to reduce frequency of layout updates
         const debounce = (func, delay) => {
@@ -400,7 +418,7 @@ const Collab = () => {
                 <QuestionContainer question={question} />
 
                 <div style={{ display: "grid", gridTemplateRows: "3fr 2fr", marginLeft: "10px", rowGap: "10px", overflow: "auto" }}>
-                    <CodeEditor language={language} onMount={handleEditorDidMount} />
+                    <CodeEditor defaultCode={question.default_code[language]} language={language} onMount={handleEditorDidMount} />
 
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ backgroundColor: '#1C1678', borderRadius: '10px 10px 0 0' }}>
@@ -426,7 +444,7 @@ const Collab = () => {
                                     }} 
                                 />
                                 <Tab 
-                                    label="ChatBox" 
+                                    label="Testcases" 
                                     {...a11yProps(1)} 
                                     sx={{ 
                                         color: 'white', 
@@ -444,8 +462,27 @@ const Collab = () => {
                                     }} 
                                 />
                                 <Tab 
-                                    label="AI Assistant" 
+                                    label="ChatBox" 
                                     {...a11yProps(2)} 
+                                    sx={{ 
+                                        color: 'white', 
+                                        fontWeight: 'bold', 
+                                        fontFamily: 'Poppins' ,
+                                        '&:hover': {
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                        },
+                                        '&.Mui-selected': { 
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                            fontWeight: 'bolder', 
+                                        }
+                                    }} 
+                                />
+                                <Tab 
+
+                                    label="AI Assistant" 
+                                    {...a11yProps(3)} 
                                     sx={{ 
                                         color: 'white', 
                                         fontWeight: 'bold', 
@@ -467,6 +504,9 @@ const Collab = () => {
                             <Output editorRef={editorRef} language={language} />
                         </CustomTabPanel>
                         <CustomTabPanel value={tabValue} index={1}>
+                            <Testcases functionName={question.function_name} testCases={question.test_cases} editorRef={editorRef} language={language} />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={tabValue} index={2}>
                             <ChatBox 
                                 socket={socketRef.current} 
                                 username={username}  
@@ -477,7 +517,7 @@ const Collab = () => {
                                 isMuted={isMuted}
                             />
                         </CustomTabPanel>
-                        <CustomTabPanel value={tabValue} index={2}>
+                        <CustomTabPanel value={tabValue} index={3}>
                             <ChatBot socket={socketRef.current} username={username}  messages={botmessages}/>
                         </CustomTabPanel>
                     </Box>

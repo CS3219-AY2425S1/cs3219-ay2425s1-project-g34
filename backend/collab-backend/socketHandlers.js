@@ -150,6 +150,7 @@ function handleSocketEvents(io) {
                     // If room is empty, clean up the room
                     if (roomIsEmpty) {
                         cleanupRoom(socket.roomId);
+                        io.to(socket.roomId).emit('room-closed');
                         chatHistories.delete(socket.roomId);
                         botChatHistories.delete(socket.roomId);
                     }

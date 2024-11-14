@@ -12,13 +12,45 @@ function normalizeTitle(title) {
 }
 
 function validateQuestionFields(fields) {
-    let { title, description, topic, difficulty, examples, leetcode_link } = fields;
+    let { title, description, topic, difficulty, examples, leetcode_link, function_name, default_code, test_cases } = fields;
 
     title = title.trim();
     description = description.trim();
     examples.trim();
     difficulty = difficulty.trim();
     leetcode_link = leetcode_link ? leetcode_link.trim() : "";
+    function_name = function_name ? function_name.trim() : "";
+
+    // Parse default_code
+    if (typeof default_code === 'string') {
+        try {
+            default_code = JSON.parse(default_code);
+        } catch (error) {
+            return { valid: false, message: "Default code must be a valid JSON string" };
+        }
+    }
+
+    // Validate default_code
+    if (!default_code || !default_code.python || !default_code.javascript || !default_code.java) {
+        return { valid: false, message: "Default code for all languages (python, javascript, java) must be provided" };
+    }
+
+    // Parse test_cases
+    if (typeof test_cases === 'string') {
+        try {
+            test_cases = JSON.parse(test_cases);
+        } catch (error) {
+            return { valid: false, message: "Test cases must be a valid JSON string" };
+        }
+    }
+
+    // Validate test_cases format (ensure it's an array and has the necessary properties)
+    if (test_cases && !Array.isArray(test_cases)) {
+        return { valid: false, message: "Test cases must be an array" };
+    }
+    if (test_cases && test_cases.some(test => !test.input || !test.expected_output)) {
+        return { valid: false, message: "Each test case must have input and expected_output" };
+    }
 
     // Check if topic is an array and trim each element (and remove empty strings)
     if (Array.isArray(topic)) {
@@ -30,11 +62,11 @@ function validateQuestionFields(fields) {
     }
 
     // Check if all required fields are provided
-    if (!title || !description || !topic.length || !difficulty || !examples) {
+    if (!title || !description || !topic.length || !difficulty || !test_cases || !default_code || !function_name) {
         return { valid: false, message: "All fields are required" };
     }
 
-    return { valid: true, data: { title, description, topic, difficulty, examples, leetcode_link } };
+    return { valid: true, data: { title, description, topic, difficulty, examples, leetcode_link, default_code, test_cases, function_name } };
 }
 
 async function checkExistingQuestion(title) {
@@ -107,8 +139,8 @@ export const createQuestion = [
         if (!validation.valid) {
             return res.status(400).json({ message: validation.message });
         }
-        const { title, description, topic, difficulty, examples, leetcode_link } = validation.data;
-        
+        const { title, description, topic, difficulty, examples, leetcode_link, function_name, default_code, test_cases } = validation.data;
+
         const imageFiles = req.files;
         let { images } = req.body;
         images = images ? (Array.isArray(images) ? images : [images]) : [];
@@ -129,7 +161,10 @@ export const createQuestion = [
             difficulty,
             examples,
             images: allImages,
-            leetcode_link: leetcode_link || ""
+            leetcode_link: leetcode_link || "",
+            function_name,
+            default_code,
+            test_cases: test_cases || []
         });
 
         await saveNewQuestion(newQuestion, res);
@@ -168,7 +203,7 @@ export const updateQuestion = [
     upload.array('imageFiles'),
     async (req, res) => {
         const { id } = req.params;
-        let { images, title, topic } = req.body;
+        let { images, title, topic, default_code, test_cases } = req.body;
         const imageFiles = req.files;
 
         try {
@@ -184,8 +219,12 @@ export const updateQuestion = [
                 topic = [topic.trim()].filter(t => t !== '');
             }
 
+            // Parse default_code and test_cases
+            default_code = typeof default_code === 'string' ? JSON.parse(default_code) : default_code;
+            test_cases = typeof test_cases === 'string' ? JSON.parse(test_cases) : test_cases;
+
             // Validate updated fields
-            const validation = validateQuestionFields({ ...question.toObject(), ...req.body, topic });
+            const validation = validateQuestionFields({ ...question.toObject(), ...req.body, topic, default_code, test_cases });
             if (!validation.valid) {
                 return res.status(400).json({ message: validation.message });
             }
@@ -195,14 +234,14 @@ export const updateQuestion = [
                 const existingQuestion = await checkExistingQuestion(title);
                 if (existingQuestion && existingQuestion.id !== id) {
                     return res.status(409).json({ message: "A question with this title already exists" });
-                }    
+                }
             }
 
             images = images ? (Array.isArray(images) ? images : [images]) : [];
             const allImages = await handleImages(images, imageFiles, id);
             await deleteOldImages(question, allImages);
 
-            const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: { ...req.body, topic, images: allImages } }, { new: true });
+            const updatedQuestion = await Question.findByIdAndUpdate(id, { $set: { ...req.body, topic, default_code, test_cases, images: allImages } }, { new: true });
             if (!updatedQuestion) {
                 return res.status(404).json({ message: "Question not found" });
             }
@@ -264,7 +303,6 @@ export const getQuestionById = async (req, res) => {
 }
 
 // Get a question by topic and difficulty
-
 export const getQuestionByTopicAndDifficulty = async (req, res) => {
     const { topic, difficulty, roomId } = req.query;
 
@@ -287,4 +325,3 @@ export const getQuestionByTopicAndDifficulty = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-
