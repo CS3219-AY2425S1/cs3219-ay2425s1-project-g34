@@ -30,7 +30,7 @@ export default function HistoryTable() {
 
   useEffect(() => {
     const fetchUserHistory = async () => {
-      const user = await userService.getUserById(userId, cookies.token);
+      const user = await getUserById(userId, cookies.token);
       const { data } = await axios.post(`${apiUrl}/bulk`, 
         {"ids": user.history},
         {withCredentials: true}
