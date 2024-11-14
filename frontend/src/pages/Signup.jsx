@@ -6,6 +6,8 @@ import AuthLayout from "../components/auth/AuthLayout";
 import '../styles/AuthForm.css';
 
 const SignUp = () => {
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
+
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState({
     username: "",
@@ -40,7 +42,7 @@ const SignUp = () => {
     }
     try {
       const response = await axios.post(
-        "http://localhost:3001/users/",
+        `${apiUrl}/users/`,
         {
           ...inputValue,
         },

@@ -11,6 +11,8 @@ const useAuth = () => {
   const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
 
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
+
   useEffect(() => {
     const verifyCookie = async () => {
       if (!cookies.token) {
@@ -19,7 +21,7 @@ const useAuth = () => {
       }
       try {
         const response = await axios.get(
-          "http://localhost:3001/auth/verify-token",
+          `${apiUrl}/auth/verify-token`,
           { 
             headers: {
               Authorization: `Bearer ${cookies.token}`
@@ -28,6 +30,7 @@ const useAuth = () => {
           }
         );
         if (response.status === 200) {
+          console.log(response);
           const { data } = response.data;
           setUsername(data.username);
           setPriviledge(data.isAdmin);

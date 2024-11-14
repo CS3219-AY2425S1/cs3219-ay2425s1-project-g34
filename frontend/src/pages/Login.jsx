@@ -32,7 +32,6 @@ const Login = () => {
     });
 
   const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
-  console.log(apiUrl);
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
