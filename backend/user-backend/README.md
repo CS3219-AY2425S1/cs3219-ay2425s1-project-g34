@@ -291,3 +291,90 @@
     | 200 (OK)                    | Token verified, authenticated user's data returned |
     | 401 (Unauthorized)          | Missing/invalid/expired JWT                        |
     | 500 (Internal Server Error) | Database or server error                           |
+
+### Verify Email
+
+- This endpoint allows one to use a JWT token to verify an account's email associated with the token. Upon successful verification, the respective account will either be activated (for new accounts) or updated with the new email address.
+- HTTP Method: `POST`
+- Endpoint: http://localhost:3001/auth/verify-email
+- Headers
+  - Required: `Authorization: Bearer <JWT_VERIFICATION_TOKEN>`
+- Body: not required
+ 
+- Responses:
+
+    | Response Code               | Explanation                             |
+    |-----------------------------|-----------------------------------------|
+    | 200 (OK)                    | Token verified, account activated       |
+    | 400 (Bad Request)           | Missing token                           |
+    | 401 (Unauthorized)          | Expired token                           |
+    | 403 (Forbidden)             | Invalid token or already used           |
+    | 404 (Account not found)     | Account associated with token not found |
+    | 500 (Internal Server Error) | Database or server error                |
+
+### Verify Password Change
+
+- This endpoint allows one to use a JWT token to verify an account's password change. Upon successful verification, the account's password will be successfully updated.
+- HTTP Method: `POST`
+- Endpoint: http://localhost:3001/auth/verify-password
+- Headers
+  - Required: `Authorization: Bearer <JWT_VERIFICATION_TOKEN>`
+- Body: not required
+ 
+- Responses:
+
+    | Response Code               | Explanation                             |
+    |-----------------------------|-----------------------------------------|
+    | 200 (OK)                    | Token verified                          |
+    | 400 (Bad Request)           | Missing token                           |
+    | 401 (Unauthorized)          | Expired token                           |
+    | 403 (Forbidden)             | Invalid token or already used           |
+    | 404 (Account not found)     | Account associated with token not found |
+    | 500 (Internal Server Error) | Database or server error                |
+
+### Resend email verification
+
+- This endpoint allows one to resend an email verification link.
+- HTTP Method: `POST`
+- Endpoint: http://localhost:3001/auth/resend-verification
+- Body
+  - Required: one `email` (string)
+
+    ```json
+    {
+      "email": "example@gmail.com"
+    }
+    ```
+ 
+- Responses:
+
+    | Response Code               | Explanation                             |
+    |-----------------------------|-----------------------------------------|
+    | 200 (OK)                    | Email successfully sent                 |
+    | 400 (Bad Request)           | Missing field for email                 |
+    | 404 (Account not found)     | Account associated with email not found |
+    | 500 (Internal Server Error) | Database or server error                |
+
+### Forget Password
+
+- This endpoint allows one to change password for an account without account authorization. Verification will be sent to the requested email before the password is successfully updated.
+- HTTP Method: `POST`
+- Endpoint: http://localhost:3001/auth/forget-password
+- Body
+  - Required: one `email` (string) and one `password` (string)
+
+    ```json
+    {
+      "emai": "example@gmail.com",
+      "password": "abcd12345"
+    }
+    ```
+ 
+- Responses:
+
+    | Response Code               | Explanation                             |
+    |-----------------------------|-----------------------------------------|
+    | 200 (OK)                    | Verification sent                       |
+    | 400 (Bad Request)           | Missing fields or invalid password      |
+    | 404 (Account not found)     | Account associated with email not found |
+    | 500 (Internal Server Error) | Database or server error                |

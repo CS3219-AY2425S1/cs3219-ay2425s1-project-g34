@@ -36,37 +36,99 @@ export async function findUserByUsernameOrEmail(username, email) {
   });
 }
 
+export async function findUserByUsernameOrAllEmails(username, email) {
+  return UserModel.findOne({
+    $or: [
+      { username },
+      { email },
+      { tempEmail: email },
+    ],
+  });
+}
+
+export async function findUserByAllEmails(email) {
+  return UserModel.findOne({
+    $or: [
+      { email },
+      { tempEmail: email },
+    ]
+  });
+}
+
 export async function findAllUsers() {
   return UserModel.find();
 }
 
-export async function updateUserById(userId, username, email, password, profileImage) {
+// ======================= UPDATES ================================ //
+
+export async function updateUserById(userId, updatedValues) {
   return UserModel.findByIdAndUpdate(
     userId,
-    {
-      $set: {
-        username,
-        email,
-        password,
-        profileImage,
-      },
-    },
+    { $set: updatedValues },
     { new: true },  // return the updated user
   );
+}
+
+export async function updateUserEmailById(userId, email) {
+  return await updateUserById(userId, { email });
+}
+
+export async function updateUserPasswordById(userId, password) {
+  return await updateUserById(userId, { password });
+}
+
+export async function updateUserImageById(userId, profileImage) {
+  return await updateUserById(userId, { profileImage });
 }
 
 export async function updateUserPrivilegeById(userId, isAdmin) {
+  return await updateUserById(userId, { isAdmin });
+}
+
+export async function updateUserVerifyStatusById(userId, isVerified) {
+  return await updateUserById(userId, { isVerified });
+}
+
+export async function updateUserTempPasswordById(userId, tempPassword) {
+  return await updateUserById(userId, { tempPassword });
+}
+
+// =======================  ADDS   ================================ //
+
+export async function addHistoryById(userId, historyId) {
   return UserModel.findByIdAndUpdate(
     userId,
-    {
-      $set: {
-        isAdmin,
-      },
-    },
+    { $addToSet: { history: historyId }},
     { new: true },  // return the updated user
   );
 }
 
+// ======================= DELETES ================================ //
+
 export async function deleteUserById(userId) {
   return UserModel.findByIdAndDelete(userId);
+}
+
+export async function deleteTempEmailById(userId) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    { $unset: {tempEmail: ''} },
+    { new: true },  // return the updated user
+  ); 
+}
+
+export async function deleteTempPasswordById(userId) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    { $unset: {tempPassword: ''} },
+    { new: true },  // return the updated user
+  ); 
+}
+
+export async function deleteHistoryById(userId, historyId) {
+  return UserModel.findByIdAndUpdate(
+    userId,
+    { $pull: { history: historyId }},
+    { new: true },  // return the updated user
+  );
 }

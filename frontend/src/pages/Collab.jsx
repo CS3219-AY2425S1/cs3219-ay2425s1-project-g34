@@ -10,8 +10,10 @@ import io from 'socket.io-client';
 import CollabNavBar from "../components/navbar/CollabNavbar";
 import QuestionContainer from "../components/collaboration/QuestionContainer";
 import QuitConfirmationPopup from "../components/collaboration/QuitConfirmationPopup";
+import SubmitPopup from "../components/collaboration/SubmitPopup";
 import PartnerQuitPopup from "../components/collaboration/PartnerQuitPopup";
 import TimeUpPopup from "../components/collaboration/TimeUpPopup";
+import historyService from "../services/history-service";
 import useAuth from "../hooks/useAuth";
 import { height } from "@mui/system";
 
@@ -21,17 +23,19 @@ const socketIoUrl = "http://localhost:8200";  // Socket.IO remains on port 8200
 const Collab = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { username } = useAuth();
+    const { username, userId, cookies } = useAuth();
 
     const ydoc = useRef(new Y.Doc()).current;
     const editorRef = useRef(null);
     const socketRef = useRef(null);
     const providerRef = useRef(null);
     const intervalRef = useRef(null);
+    const attemptStatus = useRef('attempted');
 
     const [countdown, setCountdown] = useState(20); // set to 1 min default timer
     const [timeOver, setTimeOver] = useState(false);
 
+    const [showSubmitPopup, setShowSubmitPopup] = useState(false);
     const [showQuitPopup, setShowQuitPopup] = useState(false);
     const [showPartnerQuitPopup, setShowPartnerQuitPopup] = useState(false);
 
@@ -146,14 +150,21 @@ const Collab = () => {
 
     if (!location.state) { return null; }
 
-    const { question, language, matchedUser, roomId } = location.state;
+    const { question, language, matchedUser, roomId, datetime } = location.state;
     const partnerUsername = matchedUser.user1 === username ? matchedUser.user2 : matchedUser.user1;
-
-    const handleSubmit = () => { console.log("Submit code"); };
 
     const handleQuit = () => setShowQuitPopup(true);
 
     const handleQuitConfirm = () => {
+        historyService.updateUserHistory(userId, cookies.token, {
+            roomId,
+            question: question._id,
+            user: userId,
+            partner: partnerUsername,
+            status: attemptStatus.current,
+            datetime: datetime,
+            solution: editorRef.current.getValue(),
+        });
         setShowPartnerQuitPopup(false);
         socketRef.current.emit("user-left", location.state.roomId);
         providerRef.current?.destroy();
@@ -161,6 +172,16 @@ const Collab = () => {
     };
 
     const handleQuitCancel = () => setShowQuitPopup(false);
+
+    const handleSubmit = () => setShowSubmitPopup(true);
+
+    const handleSubmitConfirm = () => {
+        console.log("Submit code");
+        attemptStatus.current = "submitted";
+        handleQuitConfirm(); // invoke quit function
+    };
+
+    const handleSubmitCancel = () => setShowSubmitPopup(false);
 
     const handleContinueSession = () => {
         socketRef.current.emit("continue-session", roomId);
@@ -208,6 +229,12 @@ const Collab = () => {
                     />
                 </div>
                 {/* Conditionally render popups */}
+                {showSubmitPopup && (
+                    <SubmitPopup
+                        confirmQuit={handleSubmitConfirm}
+                        cancelQuit={handleSubmitCancel}
+                    />
+                )}
                 {showQuitPopup && (
                     <QuitConfirmationPopup 
                         confirmQuit={handleQuitConfirm} 

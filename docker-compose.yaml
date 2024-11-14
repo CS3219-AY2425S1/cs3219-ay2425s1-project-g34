@@ -78,6 +78,16 @@ services:
     networks:
       - common-network
 
+  history-service:
+    build: ./backend/history-backend
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./backend/history-backend:/app
+      - /app/node_modules
+    networks:
+      - common-network
+      
 networks:
   common-network:
     driver: bridge
