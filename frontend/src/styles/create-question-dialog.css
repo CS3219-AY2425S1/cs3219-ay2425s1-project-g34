@@ -1,0 +1,29 @@
+.dialog-title {
+    font-family: 'Poppins' !important;
+    font-size: 30px !important;
+    font-weight: 1000 !important;
+    color: black;
+    text-align: center;
+    padding-bottom: 0 !important;
+}
+
+.text-field .MuiOutlinedInput-root .MuiOutlinedInput-input {
+    font-family: 'Poppins'; /* Set the font family */
+    font-size: 16px;        /* Set the font size */
+    font-weight: 500;       /* Set the font weight */
+}
+
+.dialog-content {
+    font-family: 'Poppins';
+    font-size: 16px;
+    font-weight: 600;
+    color: black;
+    padding-top: 0;
+}
+
+.dialog-actions {
+    font-family: 'Poppins';
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: rgb(67, 139, 247) !important;
+}

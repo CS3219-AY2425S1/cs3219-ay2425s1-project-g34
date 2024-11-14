@@ -1,0 +1,92 @@
+services:
+  frontend-service:
+    build: ./frontend
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+      - USER_AUTH_URL=http://user-service:3001/auth/verify-token
+    networks:
+      - common-network
+
+  question-service:
+    build: ./backend/question-backend
+    ports:
+      - 4000:4000
+    volumes:
+      - ./backend/question-backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+      - USER_AUTH_URL=http://user-service:3001/auth/verify-token
+    networks:
+      - common-network
+
+  user-service:
+    build:
+      context: ./backend/user-backend
+    ports:
+      - 3001:3001
+    volumes:
+      - ./backend/user-backend:/app
+      - ./backend/user-backend/googleKey.json:/app/googleKey.json
+      - /app/node_modules
+    env_file:
+      - ./backend/user-backend/.env
+    networks:
+      - common-network
+  
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - common-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  matching-service:
+    build: ./backend/matching-backend
+    ports:
+      - "3002:3002"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - common-network
+  
+  collaboration-service:
+    build: ./backend/collab-backend
+    ports:
+      - "8200:8200"
+      - "8201:8201"
+    volumes:
+      - ./backend/collab-backend:/app
+      - /app/node_modules
+    env_file:
+      - ./backend/collab-backend/.env
+    networks:
+      - common-network
+
+  history-service:
+    build: ./backend/history-backend
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./backend/history-backend:/app
+      - /app/node_modules
+    networks:
+      - common-network
+      
+networks:
+  common-network:
+    driver: bridge

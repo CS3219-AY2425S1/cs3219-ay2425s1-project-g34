@@ -1,0 +1,68 @@
+.filters select {
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #1C1678;
+    padding: 8px 12px;
+    border: 2px solid #1C1678;
+    border-radius: 8px;
+    background-color: #F7F7F7;
+    margin-right: 10px; /* Spacing between filters */
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.filters select:focus {
+    border-color: #41AFFF; /* Add a subtle border change on focus */
+}
+
+.filters {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Consistent spacing between dropdowns */
+    margin-top: 20px;
+}
+
+h1 {
+    color: #1C1678;
+    font-family: Poppins;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    text-align: left;
+    margin-top: 20px;
+}
+
+.description {
+    color: black;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    text-align: left;
+    margin-top: -10px;
+    word-wrap: break-word;
+}
+
+.questions-container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.question-table-container {
+    position: relative;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.table-buttons {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px; /* Space between buttons */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.admin-button {
+    margin-left: 8px;
+}

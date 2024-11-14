@@ -1,0 +1,22 @@
+.blue-triangle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-left: calc(70vw) solid transparent;
+    border-bottom: calc(80vh) solid #1c1678;
+    z-index: -1;
+  }
+  
+  .grey-triangle {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-right: calc(40vw) solid transparent;
+    border-bottom: calc(50vh) solid #f7f7f7;
+    z-index: -2;
+  }
+  
