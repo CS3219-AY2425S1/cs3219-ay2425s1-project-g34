@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collab-service
+  namespace: peerprep
+  labels:
+    app: collab-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collab-service
+  template:
+    metadata:
+      labels:
+        app: collab-service
+    spec:
+      containers:
+        - name: collab-service
+          image: asia-southeast1-docker.pkg.dev/peerprep-userservice-436407/peerprep/miljyy/collab-service:latest
+          ports:
+            - name: collab-svc-8200
+              containerPort: 8200
+            - name: collab-svc-8201
+              containerPort: 8201
+
+      imagePullSecrets:
+        - name: gcr-json-key
