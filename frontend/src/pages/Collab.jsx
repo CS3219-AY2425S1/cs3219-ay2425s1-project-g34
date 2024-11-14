@@ -1,21 +1,27 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
-import Editor from "@monaco-editor/react";
 import Snackbar from '@mui/material/Snackbar';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Box from '@mui/material/Box';
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { MonacoBinding } from "y-monaco";
 import io from 'socket.io-client';
 
+import CodeEditor from "../components/collaboration/CodeEditor";
 import CollabNavBar from "../components/navbar/CollabNavbar";
+import Output from "../components/collaboration/Output";
 import QuestionContainer from "../components/collaboration/QuestionContainer";
 import QuitConfirmationPopup from "../components/collaboration/QuitConfirmationPopup";
 import SubmitPopup from "../components/collaboration/SubmitPopup";
 import PartnerQuitPopup from "../components/collaboration/PartnerQuitPopup";
 import TimeUpPopup from "../components/collaboration/TimeUpPopup";
 import historyService from "../services/history-service";
+import ChatBox from "../components/collaboration/ChatBox";
+import CustomTabPanel from "../components/collaboration/CustomTabPanel";
+import { a11yProps } from "../components/collaboration/CustomTabPanel";
 import useAuth from "../hooks/useAuth";
-import { height } from "@mui/system";
 
 const yjsWsUrl = "ws://localhost:8201/yjs";  // y-websocket now on port 8201
 const socketIoUrl = "http://localhost:8200";  // Socket.IO remains on port 8200
@@ -32,7 +38,7 @@ const Collab = () => {
     const intervalRef = useRef(null);
     const attemptStatus = useRef('attempted');
 
-    const [countdown, setCountdown] = useState(20); // set to 1 min default timer
+    const [countdown, setCountdown] = useState(180); // set to 3 min default timer
     const [timeOver, setTimeOver] = useState(false);
 
     const [showSubmitPopup, setShowSubmitPopup] = useState(false);
@@ -41,6 +47,10 @@ const Collab = () => {
 
     const [isSoloSession, setIsSoloSession] = useState(false);
     const [showSnackbar, setShowSnackbar] = useState(false);
+
+    const [tabValue, setTabValue] = useState(0);
+
+    const [messages, setMessages] = useState([]);
 
     // Ensure location state exists, else redirect to home
     useEffect(() => {
@@ -60,7 +70,7 @@ const Collab = () => {
 
         // Listen for 'start-timer' event to start countdown (used for both new session and continue session)
         socketRef.current.on('start-timer', () => {
-            setCountdown(20); // Reset to your desired starting time
+            setCountdown(180); // Reset to your desired starting time
             setTimeOver(false);
             startCountdown();
         });
@@ -68,6 +78,15 @@ const Collab = () => {
         // Listen for user-left event for the specific room
         socketRef.current.on("user-left", () => {
             setShowPartnerQuitPopup(true);
+        });
+        
+        // Listen for incoming messages and update `messages` state
+        socketRef.current.on("chat-message", (msg) => {
+            setMessages((prevMessages) => [...prevMessages, msg]);
+        });
+
+        socketRef.current.on("chat-history", (history) => {
+            setMessages(history);
         });
 
         // Clean up on component unmount
@@ -188,7 +207,7 @@ const Collab = () => {
     };
 
     const handleContinueSessionAlone = () => {
-        setCountdown(20); // Reset to your desired starting time
+        setCountdown(180); // Reset to your desired starting time
         setTimeOver(false);
         startCountdown();
         setIsSoloSession(true);
@@ -205,6 +224,10 @@ const Collab = () => {
         setShowSnackbar(false);
     };
 
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+    }
+
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
             <CollabNavBar 
@@ -213,21 +236,65 @@ const Collab = () => {
                 handleSubmit={handleSubmit}
                 handleQuit={handleQuit}
             />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", height: "calc(100vh - 75px)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", height: "calc(100vh - 75px)", padding: "10px" }}>
                 <QuestionContainer question={question} />
-                <div style={{ flex: 1, overflow: "hidden" }}>
-                    <Editor
-                        theme="vs-dark"
-                        defaultLanguage="python"
-                        language={language}
-                        onMount={handleEditorDidMount}
-                        options={{
-                            fontSize: 16,
-                            scrollBeyondLastLine: false,
-                            minimap: { enabled: false }
-                        }}
-                    />
+
+                <div style={{ display: "grid", gridTemplateRows: "3fr 2fr", marginLeft: "10px", rowGap: "10px", overflow: "auto" }}>
+                    <CodeEditor language={language} onMount={handleEditorDidMount} />
+
+                    <Box sx={{ width: '100%' }}>
+                        <Box sx={{ backgroundColor: '#1C1678', borderRadius: '10px 10px 0 0' }}>
+                            <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example">
+                                <Tab 
+                                    label="Output" 
+                                    {...a11yProps(0)} 
+                                    sx={{ 
+                                        color: 'white', 
+                                        fontWeight: 'bold', 
+                                        fontFamily: 'Poppins' ,
+                                        '&:hover': {
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                            borderRadius: '10px 0 0 0',
+                                        },
+                                        '&.Mui-selected': { 
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                            borderRadius: '10px 0 0 0',
+                                            fontWeight: 'bolder', 
+                                        }
+                                    }} 
+                                />
+                                <Tab 
+                                    label="ChatBox" 
+                                    {...a11yProps(1)} 
+                                    sx={{ 
+                                        color: 'white', 
+                                        fontWeight: 'bold', 
+                                        fontFamily: 'Poppins' ,
+                                        '&:hover': {
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                        },
+                                        '&.Mui-selected': { 
+                                            color: 'white',
+                                            backgroundColor: '#7bc9ff',
+                                            fontWeight: 'bolder', 
+                                        }
+                                    }} 
+                                />
+                                
+                            </Tabs>
+                        </Box>
+                        <CustomTabPanel value={tabValue} index={0}>
+                            <Output editorRef={editorRef} language={language} />
+                        </CustomTabPanel>
+                        <CustomTabPanel value={tabValue} index={1}>
+                            <ChatBox socket={socketRef.current} username={username}  messages={messages} />
+                        </CustomTabPanel>
+                    </Box>
                 </div>
+
                 {/* Conditionally render popups */}
                 {showSubmitPopup && (
                     <SubmitPopup
@@ -255,6 +322,7 @@ const Collab = () => {
                         isSoloSession={isSoloSession}/>
                 )}
             </div>
+            
             <Snackbar
                 open={showSnackbar}
                 onClose={handleCloseSnackbar}

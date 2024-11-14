@@ -7,7 +7,7 @@ const useAuth = () => {
   const navigate = useNavigate();
   const [cookies, removeCookie] = useCookies([]);
   const [username, setUsername] = useState("");
-  const [priviledge, setPriviledge] = useState(false);
+  const [privilege, setPrivilege] = useState(false);
   const [userId, setUserId] = useState("");
   const [email, setEmail] = useState("");
 
@@ -33,7 +33,7 @@ const useAuth = () => {
           console.log(response);
           const { data } = response.data;
           setUsername(data.username);
-          setPriviledge(data.isAdmin);
+          setPrivilege(data.isAdmin);
           setUserId(data.id);
           setEmail(data.email);
         } else {
@@ -49,7 +49,7 @@ const useAuth = () => {
     verifyCookie();
   }, [cookies, navigate, removeCookie]);
 
-  return { username, priviledge, userId, email, cookies, removeCookie };
+  return { username, privilege, userId, email, cookies, removeCookie };
 };
 
 export default useAuth;

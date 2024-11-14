@@ -172,7 +172,7 @@ const StartSession = ({ username }) => {
           <label>Language</label>
           <select value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="python">Python</option>
-            <option value="javaScript">JavaScript</option>
+            <option value="javascript">Javascript</option>
             <option value="java">Java</option>
           </select>
         </div>

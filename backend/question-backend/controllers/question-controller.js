@@ -12,10 +12,11 @@ function normalizeTitle(title) {
 }
 
 function validateQuestionFields(fields) {
-    let { title, description, topic, difficulty, input, expected_output, leetcode_link } = fields;
+    let { title, description, topic, difficulty, examples, leetcode_link } = fields;
 
     title = title.trim();
     description = description.trim();
+    examples.trim();
     difficulty = difficulty.trim();
     leetcode_link = leetcode_link ? leetcode_link.trim() : "";
 
@@ -29,11 +30,11 @@ function validateQuestionFields(fields) {
     }
 
     // Check if all required fields are provided
-    if (!title || !description || !topic.length || !difficulty || !input || !expected_output) {
+    if (!title || !description || !topic.length || !difficulty || !examples) {
         return { valid: false, message: "All fields are required" };
     }
 
-    return { valid: true, data: { title, description, topic, difficulty, input, expected_output, leetcode_link } };
+    return { valid: true, data: { title, description, topic, difficulty, examples, leetcode_link } };
 }
 
 async function checkExistingQuestion(title) {
@@ -106,7 +107,7 @@ export const createQuestion = [
         if (!validation.valid) {
             return res.status(400).json({ message: validation.message });
         }
-        const { title, description, topic, difficulty, input, expected_output, leetcode_link } = validation.data;
+        const { title, description, topic, difficulty, examples, leetcode_link } = validation.data;
         
         const imageFiles = req.files;
         let { images } = req.body;
@@ -126,8 +127,7 @@ export const createQuestion = [
             description,
             topic,
             difficulty,
-            input,
-            expected_output,
+            examples,
             images: allImages,
             leetcode_link: leetcode_link || ""
         });

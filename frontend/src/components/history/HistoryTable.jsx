@@ -4,7 +4,7 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePag
 import QuestionDialog from './QuestionDialog';
 import CodeDialog from './CodeDialog';
 import questionService from '../../services/question-service';
-import userService from '../../services/user-service';
+import { getUserById, } from '../../services/user-service';
 import historyService from '../../services/history-service';
 import useAuth from "../../hooks/useAuth";
 

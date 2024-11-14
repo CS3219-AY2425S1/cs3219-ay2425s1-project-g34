@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { validateEmail, validateUsername } from "../services/user-service";
 import GeneralNavbar from "../components/navbar/GeneralNavbar";
-import "../styles/Profile.css";
 import DefaultImage from '../assets/Default.jpg';
 import EditImage from '../assets/Edit.png';
 import useAuth from "../hooks/useAuth";
+import "../styles/Profile.css";
 
 const Profile = () => {
   const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
@@ -52,17 +53,12 @@ const Profile = () => {
 
   const handleSave = async () => {
     // Validation
-    if (!userData.username) {
-      toast.error("Username cannot be empty.");
+    const res = validateUsername(userData.username) || validateEmail(userData.email);
+    if (res) {
+      toast.error(res);
       return;
     }
 
-    // Simple email validation regex
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-    if (!emailRegex.test(userData.email)) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
     try {
       // Extract username and email from the userData state
       const updatedData = {
@@ -84,7 +80,8 @@ const Profile = () => {
   
       // If successful, update the UI and show success message
       if (response.status === 200) {
-        toast.success("Changes saved successfully!");
+        toast.success(`Changes saved successfully!
+          For email changes, a verification email has been sent to your new address.`);
       } else {
         toast.error("Failed to save changes.");
       }
@@ -93,7 +90,9 @@ const Profile = () => {
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to save changes.");
+      toast.error("Failed to save changes: " + 
+        (error.response && error.response.data && error.response.data.message) + '.'
+      );
     }
   };
 

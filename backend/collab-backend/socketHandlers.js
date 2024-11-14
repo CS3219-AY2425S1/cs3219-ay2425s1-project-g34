@@ -2,8 +2,8 @@ const { addContinueVote } = require('./sessionManager');
 const { addUserToRoom, removeUserFromRoom, getRoomUserCount, cleanupRoom } = require('./roomManager');
 
 function handleSocketEvents(io) {
-    
     const disconnectTimeouts = new Map(); // Store timeout references for each user
+    const chatHistories = new Map(); // Temporary in-memory storage for chat histories per room
 
     io.on('connection', (socket) => {
         console.log('Socket.IO client connected');
@@ -22,16 +22,42 @@ function handleSocketEvents(io) {
 
         // Join a specific room and store roomId on socket instance
         socket.on('join-room', (roomId) => {
-            
             socket.roomId = roomId;
             socket.join(roomId);
             addUserToRoom(roomId, socket.username);
             console.log(socket.username + ' joined room: ' + roomId);
 
+            // Initialize chat history for this room if not already initialized
+            if (!chatHistories.has(roomId)) {
+                chatHistories.set(roomId, []);
+            }
+
+            // Send existing chat history to the new user
+            socket.emit('chat-history', chatHistories.get(roomId));
+
             // Check if both users have joined
             if (getRoomUserCount(roomId) === 2) {
                 io.to(roomId).emit('start-timer');
             }
+        });
+        
+        // Handle chat messages
+        socket.on('chat-message', (messageContent) => {
+            const roomId = socket.roomId;
+            const username = socket.username;
+
+            if (!roomId || !username) return;
+
+            const message = {
+                username: username,
+                content: messageContent
+            };
+
+            // Save message in chat history
+            chatHistories.get(roomId).push(message);
+
+            // Broadcast message to other users in the room
+            io.to(roomId).emit('chat-message', message);
         });
         
         // Handle disconnection with grace period
@@ -50,6 +76,7 @@ function handleSocketEvents(io) {
                     // If room is empty, clean up the room
                     if (roomIsEmpty) {
                         cleanupRoom(socket.roomId);
+                        chatHistories.delete(socket.roomId);
                     }
                     
                 }, 10000); // 10 seconds grace period
