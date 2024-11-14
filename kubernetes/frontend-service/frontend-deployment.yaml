@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-service
+  namespace: peerprep
+  labels:
+    app: frontend-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-service
+  template:
+    metadata:
+      labels:
+        app: frontend-service
+    spec:
+      containers:
+        - name: frontend-service
+          image: asia-southeast1-docker.pkg.dev/peerprep-userservice-436407/peerprep/miljyy/frontend-service:latest
+          ports:
+            - name: fe-service
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: USER_AUTH_URL
+              value: "http://user-service:3001/auth/verify-token"
+            - name: REACT_APP_API_URL
+              value: "http://35.240.237.167.nip.io"
+
+      imagePullSecrets:
+        - name: gcr-json-key

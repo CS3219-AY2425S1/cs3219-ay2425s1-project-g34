@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matching-service
+  namespace: peerprep
+  labels:
+    app: matching-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matching-service
+  template:
+    metadata:
+      labels:
+        app: matching-service
+    spec:
+      containers:
+        - name: matching-service
+          image: asia-southeast1-docker.pkg.dev/peerprep-userservice-436407/peerprep/miljyy/matching-service:latest
+          ports:
+            - name: match-service
+              containerPort: 3002
+          env:
+            - name: RABBITMQ_URL
+              value: "amqp://localhost:5672"
+
+        - name: rabbitmq  # Sidecar container for RabbitMQ
+          image: rabbitmq:management
+          ports:
+            - containerPort: 5672   # RabbitMQ port for AMQP connections
+            - containerPort: 15672  # RabbitMQ management port (optional)
+
+      imagePullSecrets:
+        - name: gcr-json-key

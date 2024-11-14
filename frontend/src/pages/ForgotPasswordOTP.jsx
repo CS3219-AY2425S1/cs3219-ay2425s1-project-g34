@@ -6,6 +6,7 @@ import AuthLayout from "../components/auth/AuthLayout";
 import '../styles/AuthForm.css';
 
 const ForgotPasswordOTP = () => {
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
   const navigate = useNavigate();
   const location = useLocation();
   const [otp, setOtp] = useState("");
@@ -16,7 +17,7 @@ const ForgotPasswordOTP = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:3001/auth/forget-password/confirm-otp",
+        `${apiUrl}/auth/forget-password/confirm-otp`,
         {
           email,
           otp,
@@ -39,7 +40,7 @@ const ForgotPasswordOTP = () => {
     setIsResending(true);
     try {
       const response = await axios.post(
-        "http://localhost:3001/auth/forget-password/resend-otp",
+        `${apiUrl}/auth/forget-password/resend-otp`,
         {
           email,
         }

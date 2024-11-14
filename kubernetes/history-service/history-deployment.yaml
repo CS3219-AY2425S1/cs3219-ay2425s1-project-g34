@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: history-service
+  namespace: peerprep
+  labels:
+    app: history-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: history-service
+  template:
+    metadata:
+      labels:
+        app: history-service
+    spec:
+      containers:
+        - name: history-service
+          image: gcr.io/peerprep-userservice-436407/peerprep/history-service:latest
+          ports:
+            - name: history-service
+              containerPort: 3004
+          env:
+            - name: PORT
+              value: "3004"
+            - name: NODE_ENV
+              value: production
+            - name: ENV
+              value: "PROD"
+            - name: USER_AUTH_URL
+              value: http://user-service:3001/auth/verify-token
+            # create a secret named user-service-secret in namespace peerprep
+            # kubectl create secret generic user-service-secret --from-literal=DB_CLOUD_URI=<mongo_url> --from-literal=JWT_SECRET=<jwt_secret>
+            - name: DB_CLOUD_URI
+              valueFrom:
+                secretKeyRef:
+                  name: history-service-secret
+                  key: DB_CLOUD_URI

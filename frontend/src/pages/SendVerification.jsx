@@ -8,6 +8,7 @@ import AuthLayout from "../components/auth/AuthLayout";
 import '../styles/AuthForm.css';
 
 const SendVerification = () => {
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
 
@@ -37,7 +38,7 @@ const SendVerification = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3001/auth/resend-verification",
+        `${apiUrl}/auth/resend-verification`,
         { email: email },
         { withCredentials: true }
       );

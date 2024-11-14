@@ -10,6 +10,8 @@ import useAuth from "../hooks/useAuth";
 import "../styles/Profile.css";
 
 const Profile = () => {
+  const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
+
   const { userId, cookies } = useAuth();
   const [userData, setUserData] = useState({
     username: "",
@@ -24,7 +26,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:3001/users/${userId}`, {
+        const { data } = await axios.get(`${apiUrl}/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${cookies.token}`,
           },
@@ -66,7 +68,7 @@ const Profile = () => {
   
       // Send PATCH request to the backend
       const response = await axios.patch(
-        `http://localhost:3001/users/${userId}`,
+        `${apiUrl}/users/${userId}`,
         updatedData, // Only include username and email
         {
           headers: {
@@ -103,7 +105,7 @@ const Profile = () => {
       formData.append('profileImage', file);
       try {
         const response = await axios.patch(
-          `http://localhost:3001/users/${userId}/profileImage`,
+          `${apiUrl}/users/${userId}/profileImage`,
           formData,
           {
             headers: {
@@ -145,7 +147,7 @@ const Profile = () => {
         toDefault: true,
       };
       const response = await axios.patch(
-        `http://localhost:3001/users/${userId}/profileImage`,
+        `${apiUrl}/users/${userId}/profileImage`,
         updatedData,
         {
           headers: {
