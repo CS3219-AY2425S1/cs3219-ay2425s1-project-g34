@@ -2,12 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import { Editor, loader } from "@monaco-editor/react";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import "../../styles/code-editor.css";
 
-const CodeEditor = ({ language, onMount }) => {
+const CodeEditor = ({ defaultCode, language, onMount }) => {
     const [value, setValue] = useState("");
     const [theme, setTheme] = useState("vs-light");
     const [anchorEl, setAnchorEl] = useState(null);
+
+    const handleReset = () => {
+        setValue(defaultCode || "");
+    }
 
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme);
@@ -127,9 +132,14 @@ const CodeEditor = ({ language, onMount }) => {
         <div className="editor-container">
             <div className="editor-header">
                 <h2>{language}</h2>
-                <IconButton onClick={handleMenuClick} style={{ color: "white" }}>
-                    <SettingsIcon/>
-                </IconButton>
+                <div>
+                    <IconButton onClick={handleReset} style={{ color: "white" }}>
+                        <RestartAltIcon/>
+                    </IconButton>
+                    <IconButton onClick={handleMenuClick} style={{ color: "white" }}>
+                        <SettingsIcon/>
+                    </IconButton>   
+                </div>
                 <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}

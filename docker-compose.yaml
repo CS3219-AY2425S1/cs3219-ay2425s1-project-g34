@@ -9,6 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - REACT_APP_API_URL=http://user-service:3001
+      - REACT_APP_QUESTION_API_URL=http://question-service:4000
       - USER_AUTH_URL=http://user-service:3001/auth/verify-token
     networks:
       - common-network
@@ -73,6 +74,8 @@ services:
     volumes:
       - ./backend/collab-backend:/app
       - /app/node_modules
+    env_file:
+      - ./backend/collab-backend/.env
     networks:
       - common-network
 
