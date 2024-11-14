@@ -146,6 +146,7 @@ const normalizeOutput = (output) => {
         .replace(/\s*\]\s*/g, ']')
         .replace(/\s*\(\s*/g, '(')
         .replace(/\s*\)\s*/g, ')')
+        .replace(/'/g, '"')
         .trim();
 };
 
